@@ -57,6 +57,7 @@ public class RigidBody(Transform transform, float mass = 1.0f, float momentOfIne
     {
         var angularAcceleration = _accumulatedTorque / MomentOfInertia;
         AngularVelocity += angularAcceleration * deltaTime;
+        _accumulatedTorque = Vector3.Zero;
 
         var angularSpeed = AngularVelocity.Length();
         if (angularSpeed <= 0.0f) return;
@@ -65,8 +66,6 @@ public class RigidBody(Transform transform, float mass = 1.0f, float momentOfIne
         var rotationAngle = angularSpeed * deltaTime;
         var deltaRotation = Quaternion.CreateFromAxisAngle(rotationAxis, rotationAngle);
         Transform.Orientation = Quaternion.Normalize(deltaRotation * Transform.Orientation);
-
-        _accumulatedTorque = Vector3.Zero;
     }
 
     public void AddForce(ForceGenerator generator)
