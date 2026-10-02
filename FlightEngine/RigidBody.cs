@@ -23,6 +23,7 @@ public class RigidBody(Transform transform, float mass = 1.0f, float momentOfIne
     public bool HasInfiniteMass => InverseMass <= 0.0f;
     public Vector3 CenterOfMass { get; } = Vector3.Zero;
 
+    public bool UseGravity { get; set; }
 
     public void Integrate(float deltaTime)
     {
@@ -70,6 +71,9 @@ public class RigidBody(Transform transform, float mass = 1.0f, float momentOfIne
 
     public void AddForce(ForceGenerator generator)
     {
+        if (!UseGravity && generator is GravityForce)
+            return;
+
         var worldForce = generator.CalculateWorldForce(this);
         _accumulatedForce += worldForce;
 

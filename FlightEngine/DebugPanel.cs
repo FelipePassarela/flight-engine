@@ -85,6 +85,12 @@ public static class DebugPanel
         
         if (ImGui.Button("Reset Motion"))
             body.StopMotion();
+        
+        ImGui.SameLine();
+        
+        var useGravity = body.UseGravity;
+        if (ImGui.Checkbox("Use gravity", ref useGravity))
+            body.UseGravity = useGravity;
     }
 
     private static void RenderLinearMotion(RigidBody body)
