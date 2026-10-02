@@ -57,9 +57,10 @@ public static class DebugPanel
         ImGui.Text($"Quaternion: ({orientation.X:F4}, {orientation.Y:F4}, " +
                    $"{orientation.Z:F4}, {orientation.W:F4})");
         ImGui.Text($"Norma: {orientation.Length():F6}");
-        ImGui.Text($"World Forward: {transform.WorldForward}");
-        ImGui.Text($"World Right: {transform.WorldRight}");
-        ImGui.Text($"World Up: {transform.WorldUp}");
+
+        RenderVector("World Forward", transform.WorldForward);
+        RenderVector("World Right", transform.WorldRight);
+        RenderVector("World Up", transform.WorldUp);
 
         if (ImGui.Button("Reset orientation"))
             transform.Orientation = Quaternion.Identity;
@@ -78,7 +79,17 @@ public static class DebugPanel
 
     private static void RenderRigidBody(RigidBody body)
     {
-        if (!ImGui.CollapsingHeader("RigidBody", ImGuiTreeNodeFlags.DefaultOpen))
+        RenderLinearMotion(body);
+        RenderAngularMotion(body);
+        ImGui.NewLine();
+        
+        if (ImGui.Button("Reset Motion"))
+            body.StopMotion();
+    }
+
+    private static void RenderLinearMotion(RigidBody body)
+    {
+        if (!ImGui.CollapsingHeader("Linear motion", ImGuiTreeNodeFlags.DefaultOpen))
             return;
 
         var inverseMass = body.InverseMass;
@@ -96,15 +107,52 @@ public static class DebugPanel
         {
             var momentum = body.Mass * body.Velocity;
             var kineticEnergy = 0.5f * body.Mass * body.Velocity.LengthSquared();
-            ImGui.Text($"Momentum: ({momentum.X:F3}, {momentum.Y:F3}, {momentum.Z:F3})");
+            RenderVector("Momentum", momentum);
             ImGui.Text($"Kinetic energy: {kineticEnergy:F3}");
         }
         else
         {
             ImGui.Text("Infinite mass (inverse mass <= 0)");
         }
+    }
 
-        if (ImGui.Button("Stop body"))
-            body.StopMotion();
+    private static void RenderAngularMotion(RigidBody body)
+    {
+        if (!ImGui.CollapsingHeader("Angular motion", ImGuiTreeNodeFlags.DefaultOpen))
+            return;
+
+        var angularVelocity = body.AngularVelocity;
+        if (ImGui.DragFloat3("Angular velocity (rad/s)", ref angularVelocity, 0.01f))
+            body.AngularVelocity = angularVelocity;
+
+        var angularSpeed = body.AngularVelocity.Length();
+        ImGui.Text($"Angular speed: {angularSpeed:F4} rad/s");
+        ImGui.Text($"Angular speed: {angularSpeed * (180.0f / MathF.PI):F2} deg/s");
+        if (angularSpeed > 0.0f)
+            RenderVector("Rotation axis", body.AngularVelocity / angularSpeed);
+
+        var inertia = body.MomentOfInertia;
+        if (ImGui.DragFloat("Moment of inertia (kg m^2)", ref inertia, 0.01f)
+            && float.IsFinite(inertia) && inertia > 0.0f)
+            body.MomentOfInertia = inertia;
+
+        if (float.IsFinite(body.MomentOfInertia) && body.MomentOfInertia > 0.0f)
+        {
+            RenderVector("Angular momentum (kg m^2/s)",
+                body.MomentOfInertia * body.AngularVelocity);
+            var energy = 0.5f * body.MomentOfInertia * body.AngularVelocity.LengthSquared();
+            ImGui.Text($"Rotational kinetic energy: {energy:F4} J");
+        }
+        else
+        {
+            ImGui.Text("Moment of inertia must be finite and positive.");
+        }
+
+        RenderVector("Local center of mass", body.CenterOfMass);
+    }
+
+    private static void RenderVector(string label, Vector3 value)
+    {
+        ImGui.Text($"{label}: ({value.X:F4}, {value.Y:F4}, {value.Z:F4})");
     }
 }
