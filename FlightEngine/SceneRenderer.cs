@@ -10,7 +10,7 @@ public class SceneRenderer(Scene scene)
 
     public static void Initialize()
     {
-        Raylib.InitWindow(1200, 800, AppInfo.Name);
+        Raylib.InitWindow(1600, 900, AppInfo.Name);
         Raylib.SetTargetFPS(60);
         rlImGui.Setup();
     }
@@ -47,16 +47,24 @@ public class SceneRenderer(Scene scene)
 
     private static void RenderPlane(Scene scene)
     {
-        var planeTransform = scene.PlaneTransform;
-        var position = planeTransform.Position;
-
+        var position = scene.PlaneTransform.Position;
         Raylib.DrawSphere(position + Vector3.UnitY, 1.0f, Color.Red);
         Raylib.DrawSphereWires(position + Vector3.UnitY, 1.0f, 16, 16, Color.Maroon);
+        
+        RenderGizmo(scene.PlaneTransform);
+    }
 
+    private static void RenderGizmo(Transform transform)
+    {
         const float axisLength = 3.0f;
-        Raylib.DrawLine3D(position, position + planeTransform.WorldRight * axisLength, Color.Red);
-        Raylib.DrawLine3D(position, position + planeTransform.WorldUp * axisLength, Color.Green);
-        Raylib.DrawLine3D(position, position + planeTransform.WorldForward * axisLength, Color.Blue);
+        var position = transform.Position;
+        var rightAxis = position + transform.WorldRight * axisLength;
+        var upAxis = position + transform.WorldUp * axisLength;
+        var forwardAxis = position + transform.WorldForward * axisLength;
+
+        Raylib.DrawLine3D(position, rightAxis, Color.Red);
+        Raylib.DrawLine3D(position, upAxis, Color.Green);
+        Raylib.DrawLine3D(position, forwardAxis, Color.Blue);
     }
 
     private static void RenderUi(Scene scene)
