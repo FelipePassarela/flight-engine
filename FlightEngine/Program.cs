@@ -1,18 +1,33 @@
 ﻿using System.Numerics;
 using FlightEngine;
+using FlightEngine.Core;
 using FlightEngine.Forces;
+using FlightEngine.Rendering;
 using Raylib_cs;
-using Transform = FlightEngine.Transform;
+using Transform = FlightEngine.Core.Transform;
 
-var planeTransform = CreatePlaneTransform();
-var planeBody = new RigidBody(planeTransform, mass: 1.0f);
+// TODO: Extract main loop and entities into a FlightEngine (or better name) class
+// TODO: Refactor to use LifeCycle Callbacks pattern for components
 
-var scene = new Scene(
-    camera: CreateCamera(planeTransform),
-    planeTransform,
-    planeBody);
+var plane = new GameObject(
+    [
+        new RigidBody(mass: 1.0f),
+        new GizmoRenderer(),
+        new SphereRenderer()
+    ]
+);
+var grid = new GameObject(
+    [
+        new GridRenderer(),
+        new GizmoRenderer(axisLength: 5.0f)
+    ]
+);
+var scene = new Scene(camera: CreateCamera(plane.Transform), [plane, grid]);
 
-var sceneRenderer = new SceneRenderer(scene);
+var planeBody = plane.GetComponent<RigidBody>()!;
+var debugPanel = new DebugPanel(plane.Transform, planeBody, scene.Camera);
+var sceneRenderer = new SceneRenderer(scene, debugPanel);
+
 SceneRenderer.Initialize();
 
 while (!Raylib.WindowShouldClose())
@@ -28,20 +43,13 @@ while (!Raylib.WindowShouldClose())
     planeBody.AddForces(forces);
     planeBody.Integrate(Raylib.GetFrameTime());
 
-    TrackTransform(planeTransform, ref scene.Camera);
+    TrackTransform(plane.Transform, ref scene.Camera);
 
     sceneRenderer.Render();
 }
 
 SceneRenderer.Close();
 return;
-
-Transform CreatePlaneTransform() => new()
-{
-    Position = Vector3.Zero,
-    Orientation = Quaternion.Identity,
-    Scale = Vector3.One
-};
 
 Camera3D CreateCamera(Transform planeTransform)
 {
@@ -55,7 +63,6 @@ Camera3D CreateCamera(Transform planeTransform)
         Projection = CameraProjection.Perspective
     };
 }
-
 
 void TrackTransform(Transform transform, ref Camera3D camera)
 {

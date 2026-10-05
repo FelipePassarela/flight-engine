@@ -1,11 +1,12 @@
 ﻿using System.Numerics;
+using FlightEngine.Core;
 using FlightEngine.Forces;
 
 namespace FlightEngine;
 
-public class RigidBody(Transform transform, float mass = 1.0f, float momentOfInertia = 1.0f)
+public class RigidBody(float mass = 1.0f, float momentOfInertia = 1.0f) : Component
 {
-    public Transform Transform { get; } = transform;
+    public Transform Transform => GameObject.Transform;
     public Vector3 Velocity { get; set; } = Vector3.Zero;
     private Vector3 _accumulatedForce = Vector3.Zero;
 

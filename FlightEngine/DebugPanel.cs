@@ -2,43 +2,45 @@
 using ImGuiNET;
 using Raylib_cs;
 using rlImGui_cs;
+using Transform = FlightEngine.Core.Transform;
 
 namespace FlightEngine;
 
-public static class DebugPanel
+public class DebugPanel(Transform transform, RigidBody body, Camera3D camera)
 {
-    public static void Render(Scene scene)
+    public void Render()
     {
         rlImGui.Begin();
 
         if (ImGui.Begin($"Debug - {AppInfo.Name}"))
         {
-            RenderPerformance();
+            TrackPerformance();
             ImGui.Separator();
 
-            RenderPosition(scene.PlaneTransform);
+            TrackPosition(transform);
             ImGui.Separator();
 
-            RenderOrientation(scene.PlaneTransform);
+            TrackOrientation(transform);
             ImGui.Separator();
 
-            RenderRigidBody(scene.PlaneBody);
+            TrackRigidBody(body);
             ImGui.Separator();
 
-            RenderCamera(scene);
+            TrackCamera(camera);
         }
 
         ImGui.End();
         rlImGui.End();
     }
 
-    private static void RenderPerformance()
+    private static void TrackPerformance()
     {
+        // TODO: Remove this dependency on Raylib
         ImGui.Text($"FPS: {Raylib.GetFPS()}");
         ImGui.Text($"Frame: {Raylib.GetFrameTime() * 1000:F2} ms");
     }
 
-    private static void RenderPosition(Transform transform)
+    private static void TrackPosition(Transform transform)
     {
         var position = transform.Position;
         if (ImGui.DragFloat3("Position", ref position, 0.05f))
@@ -48,7 +50,7 @@ public static class DebugPanel
             transform.Position = Vector3.Zero;
     }
 
-    private static void RenderOrientation(Transform transform)
+    private static void TrackOrientation(Transform transform)
     {
         if (!ImGui.CollapsingHeader("Orientation", ImGuiTreeNodeFlags.DefaultOpen))
             return;
@@ -58,42 +60,39 @@ public static class DebugPanel
                    $"{orientation.Z:F4}, {orientation.W:F4})");
         ImGui.Text($"Norma: {orientation.Length():F6}");
 
-        RenderVector("World Forward", transform.WorldForward);
-        RenderVector("World Right", transform.WorldRight);
-        RenderVector("World Up", transform.WorldUp);
+        TrackVector("World Forward", transform.WorldForward);
+        TrackVector("World Right", transform.WorldRight);
+        TrackVector("World Up", transform.WorldUp);
 
         if (ImGui.Button("Reset orientation"))
             transform.Orientation = Quaternion.Identity;
     }
 
-    private static void RenderCamera(Scene scene)
+    private static void TrackCamera(Camera3D camera)
     {
-        var camera = scene.Camera;
         var fov = camera.FovY;
         if (!ImGui.SliderFloat("FOV", ref fov, 20.0f, 100.0f))
             return;
-
         camera.FovY = fov;
-        scene.Camera = camera;
     }
 
-    private static void RenderRigidBody(RigidBody body)
+    private static void TrackRigidBody(RigidBody body)
     {
-        RenderLinearMotion(body);
-        RenderAngularMotion(body);
+        TrackLinearMotion(body);
+        TrackAngularMotion(body);
         ImGui.NewLine();
-        
+
         if (ImGui.Button("Reset Motion"))
             body.StopMotion();
-        
+
         ImGui.SameLine();
-        
+
         var useGravity = body.UseGravity;
         if (ImGui.Checkbox("Use gravity", ref useGravity))
             body.UseGravity = useGravity;
     }
 
-    private static void RenderLinearMotion(RigidBody body)
+    private static void TrackLinearMotion(RigidBody body)
     {
         if (!ImGui.CollapsingHeader("Linear motion", ImGuiTreeNodeFlags.DefaultOpen))
             return;
@@ -113,7 +112,7 @@ public static class DebugPanel
         {
             var momentum = body.Mass * body.Velocity;
             var kineticEnergy = 0.5f * body.Mass * body.Velocity.LengthSquared();
-            RenderVector("Momentum", momentum);
+            TrackVector("Momentum", momentum);
             ImGui.Text($"Kinetic energy: {kineticEnergy:F3}");
         }
         else
@@ -122,7 +121,7 @@ public static class DebugPanel
         }
     }
 
-    private static void RenderAngularMotion(RigidBody body)
+    private static void TrackAngularMotion(RigidBody body)
     {
         if (!ImGui.CollapsingHeader("Angular motion", ImGuiTreeNodeFlags.DefaultOpen))
             return;
@@ -135,7 +134,7 @@ public static class DebugPanel
         ImGui.Text($"Angular speed: {angularSpeed:F4} rad/s");
         ImGui.Text($"Angular speed: {angularSpeed * (180.0f / MathF.PI):F2} deg/s");
         if (angularSpeed > 0.0f)
-            RenderVector("Rotation axis", body.AngularVelocity / angularSpeed);
+            TrackVector("Rotation axis", body.AngularVelocity / angularSpeed);
 
         var inertia = body.MomentOfInertia;
         if (ImGui.DragFloat("Moment of inertia (kg m^2)", ref inertia, 0.01f)
@@ -144,7 +143,7 @@ public static class DebugPanel
 
         if (float.IsFinite(body.MomentOfInertia) && body.MomentOfInertia > 0.0f)
         {
-            RenderVector("Angular momentum (kg m^2/s)",
+            TrackVector("Angular momentum (kg m^2/s)",
                 body.MomentOfInertia * body.AngularVelocity);
             var energy = 0.5f * body.MomentOfInertia * body.AngularVelocity.LengthSquared();
             ImGui.Text($"Rotational kinetic energy: {energy:F4} J");
@@ -154,10 +153,10 @@ public static class DebugPanel
             ImGui.Text("Moment of inertia must be finite and positive.");
         }
 
-        RenderVector("Local center of mass", body.CenterOfMass);
+        TrackVector("Local center of mass", body.CenterOfMass);
     }
 
-    private static void RenderVector(string label, Vector3 value)
+    private static void TrackVector(string label, Vector3 value)
     {
         ImGui.Text($"{label}: ({value.X:F4}, {value.Y:F4}, {value.Z:F4})");
     }

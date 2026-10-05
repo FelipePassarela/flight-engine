@@ -5,6 +5,7 @@ using Raylib_cs;
 
 namespace FlightEngine;
 
+// TODO: Turn this into a component that can be attached to a GameObject
 public static class FlightInputController
 {
     public static void Update(RigidBody body)
