@@ -7,11 +7,12 @@ using Raylib_cs;
 using Transform = FlightEngine.Core.Transform;
 
 // TODO: Extract main loop and entities into a FlightEngine (or better name) class
-// TODO: Refactor to use LifeCycle Callbacks pattern for components
+// TODO: Consider refactoring to use LifeCycle Callbacks pattern for components
 
 var plane = new GameObject(
     [
         new RigidBody(mass: 1.0f),
+        new FlightInputController(),
         new GizmoRenderer(),
         new SphereRenderer()
     ]
@@ -30,9 +31,11 @@ var sceneRenderer = new SceneRenderer(scene, debugPanel);
 
 SceneRenderer.Initialize();
 
+plane.GetComponent<FlightInputController>()?.OnInitialize();
+
 while (!Raylib.WindowShouldClose())
 {
-    FlightInputController.Update(planeBody);
+    plane.GetComponent<FlightInputController>()?.Update();
 
     var forces = new List<ForceGenerator>
     {
