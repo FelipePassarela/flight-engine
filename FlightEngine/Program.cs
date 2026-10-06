@@ -25,12 +25,12 @@ var grid = new GameObject(
 var camera = new GameObject(
     [new Camera(plane.Transform), new Follow(plane.Transform)]);
 
-var activeCamera = camera.GetComponent<Camera>()!;
-var scene = new Scene(activeCamera: activeCamera, [plane, grid, camera]);
+var scene = new Scene([plane, grid, camera]);
 
 var planeBody = plane.GetComponent<RigidBody>()!;
-var debugPanel = new DebugPanel(plane.Transform, planeBody, scene.ActiveCamera);
-var sceneRenderer = new RaylibSceneRenderer(scene, debugPanel);
+var activeCamera = camera.GetComponent<Camera>()!;
+var debugPanel = new DebugPanel(plane.Transform, planeBody, activeCamera);
+var sceneRenderer = new RaylibSceneRenderer(scene, activeCamera, debugPanel);
 
 RaylibSceneRenderer.Initialize();
 

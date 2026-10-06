@@ -1,13 +1,12 @@
-﻿using FlightEngine.Rendering.Primitives;
+﻿using FlightEngine.Core;
+using FlightEngine.Rendering.Primitives;
 using Raylib_cs;
 using rlImGui_cs;
 
 namespace FlightEngine.Rendering;
 
-public class RaylibSceneRenderer(Scene scene, DebugPanel? debugPanel)
+public class RaylibSceneRenderer(Scene scene, Camera activeCamera, DebugPanel? debugPanel)
 {
-    private Scene Scene { get; } = scene;
-
     public static void Initialize()
     {
         Raylib.InitWindow(1600, 900, AppInfo.Name);
@@ -20,7 +19,7 @@ public class RaylibSceneRenderer(Scene scene, DebugPanel? debugPanel)
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.RayWhite);
 
-        Raylib.BeginMode3D(CreateRaylibCamera(Scene.ActiveCamera));
+        Raylib.BeginMode3D(CreateRaylibCamera(activeCamera));
         RenderComponents();
         Raylib.EndMode3D();
 
@@ -31,7 +30,7 @@ public class RaylibSceneRenderer(Scene scene, DebugPanel? debugPanel)
 
     private void RenderComponents()
     {
-        foreach (var gameObject in Scene.GameObjects)
+        foreach (var gameObject in scene.GameObjects)
         foreach (var renderer in gameObject.GetComponentsOfType<Renderer>())
             renderer.Render();
     }
