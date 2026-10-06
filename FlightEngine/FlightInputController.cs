@@ -1,23 +1,32 @@
 ﻿using System.Numerics;
+using FlightEngine.Core;
 using FlightEngine.Forces;
 using ImGuiNET;
 using Raylib_cs;
 
 namespace FlightEngine;
 
-public static class FlightInputController
+public class FlightInputController : Component
 {
-    public static void Update(RigidBody body)
+    private RigidBody _body = null!;
+
+    public override void OnInitialize()
+    {
+        _body = GameObject.GetComponent<RigidBody>() ??
+                throw new InvalidOperationException("FlightInputController requires a RigidBody component.");
+    }
+
+    public override void OnUpdate(float deltaTime)
     {
         if (ImGui.GetIO().WantCaptureKeyboard) return;
 
-        HandleTranslationInput(body);
-        HandleRotationInput(body);
+        HandleTranslationInput();
+        HandleRotationInput();
     }
 
-    private static void HandleTranslationInput(RigidBody body)
+    private void HandleTranslationInput()
     {
-        var transform = body.Transform;
+        var transform = _body.Transform;
 
         var forceDirection = Vector3.Zero;
         if (Raylib.IsKeyDown(KeyboardKey.W)) forceDirection += transform.LocalForward;
@@ -28,14 +37,14 @@ public static class FlightInputController
 
         const float forceMagnitude = 10.0f;
         var force = new ThrustForce(forceDirection, forceMagnitude);
-        body.AddForce(force);
+        _body.AddForce(force);
     }
 
-    private static void HandleRotationInput(RigidBody body)
+    private void HandleRotationInput()
     {
         var localApplicationPoint = Vector3.Zero;
         var forceMagnitude = 0.0f;
-        var transform = body.Transform;
+        var transform = _body.Transform;
 
         if (Raylib.IsKeyDown(KeyboardKey.Q))
         {
@@ -50,6 +59,6 @@ public static class FlightInputController
         }
 
         var rotationForce = new ThrustForce(-transform.LocalForward, forceMagnitude, localApplicationPoint);
-        body.AddForce(rotationForce);
+        _body.AddForce(rotationForce);
     }
 }
