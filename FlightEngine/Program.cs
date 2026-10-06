@@ -7,26 +7,22 @@ using Raylib_cs;
 
 // TODO: Extract main loop and entities into a FlightApplication (or better name) class
 
-var plane = new GameObject(
-    [
-        new RigidBody(mass: 1.0f),
-        new FlightInputController(),
-        new ForceApplier(
-            [
-                new GravityForce(GravityForce.MoonGravityAcceleration),
-                new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero)
-            ]
-        ),
-        new GizmoRenderer(),
-        new SphereRenderer()
-    ]
-);
+var plane = new GameObject([
+    new RigidBody(mass: 1.0f),
+    new FlightInputController(),
+    new ForceApplier([
+        new GravityForce(GravityForce.MoonGravityAcceleration),
+        new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero),
+    ]),
+    new GizmoRenderer(),
+    new SphereRenderer(),
+]);
+
 var grid = new GameObject(
-    [new GridRenderer(), new GizmoRenderer(axisLength: 5.0f)]
-);
+    [new GridRenderer(), new GizmoRenderer(axisLength: 5.0f)]);
+
 var camera = new GameObject(
-    [new Camera(plane.Transform), new Follow(plane.Transform)]
-);
+    [new Camera(plane.Transform), new Follow(plane.Transform)]);
 
 var activeCamera = camera.GetComponent<Camera>()!;
 var scene = new Scene(activeCamera: activeCamera, [plane, grid, camera]);
