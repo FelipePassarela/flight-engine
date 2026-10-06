@@ -1,4 +1,5 @@
 ﻿using FlightEngine.Rendering;
+using FlightEngine.Rendering.Debugging;
 
 namespace FlightEngine.Application;
 
@@ -16,6 +17,15 @@ public static class FlightRendererFactory
         var plane = flightScene.Plane;
         var planeBody = plane.GetComponent<RigidBody>()!;
         var camera = flightScene.Camera.GetComponent<Camera>()!;
-        return new DebugPanel(plane.Transform, planeBody, camera, appName: AppInfo.Name);
+
+        List<DebugSection> debugSections =
+        [
+            new PerformanceDebugSection(),
+            new PositionDebugSection(plane.Transform),
+            new OrientationDebugSection(plane.Transform),
+            new RigidBodyDebugSection(planeBody),
+            new CameraDebugSection(camera)
+        ];
+        return new DebugPanel(debugSections, appName: AppInfo.Name);
     }
 }
