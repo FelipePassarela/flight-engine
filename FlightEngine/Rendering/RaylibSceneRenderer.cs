@@ -5,11 +5,15 @@ using rlImGui_cs;
 
 namespace FlightEngine.Rendering;
 
-public class RaylibSceneRenderer(Scene scene, Camera activeCamera, DebugPanel? debugPanel)
+public class RaylibSceneRenderer(
+    Scene scene,
+    Camera activeCamera,
+    DebugPanel? debugPanel,
+    string appName = "App")
 {
-    public static void Initialize()
+    public void Initialize()
     {
-        Raylib.InitWindow(1600, 900, AppInfo.Name);
+        Raylib.InitWindow(1600, 900, appName);
         Raylib.SetTargetFPS(60);
         rlImGui.Setup();
     }
@@ -37,12 +41,12 @@ public class RaylibSceneRenderer(Scene scene, Camera activeCamera, DebugPanel? d
 
     private void RenderUi()
     {
-        Raylib.DrawText(AppInfo.Name, 10, 10, 20, Color.DarkGray);
+        Raylib.DrawText(appName, 10, 10, 20, Color.DarkGray);
         Raylib.DrawFPS(10, 40);
         debugPanel?.Render();
     }
 
-    public static void Close()
+    public void Close()
     {
         rlImGui.Shutdown();
         Raylib.CloseWindow();

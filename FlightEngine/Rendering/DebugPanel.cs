@@ -6,13 +6,14 @@ using Transform = FlightEngine.Core.Transform;
 
 namespace FlightEngine.Rendering;
 
-public class DebugPanel(Transform transform, RigidBody body, Camera camera)
+// TODO: Make this a component and attach it to a game object.
+public class DebugPanel(Transform transform, RigidBody body, Camera camera, string appName = "App")
 {
     public void Render()
     {
         rlImGui.Begin();
 
-        if (ImGui.Begin($"Debug - {AppInfo.Name}"))
+        if (ImGui.Begin($"Debug - {appName}"))
         {
             TrackPerformance();
             ImGui.Separator();

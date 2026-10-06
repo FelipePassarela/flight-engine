@@ -1,52 +1,8 @@
-﻿using System.Numerics;
-using FlightEngine;
-using FlightEngine.Core;
-using FlightEngine.Forces;
-using FlightEngine.Rendering;
-using FlightEngine.Rendering.Primitives;
-using Raylib_cs;
+﻿using FlightEngine;
+using FlightEngine.Application;
 
-// TODO: Extract main loop and entities into a FlightApplication (or better name) class
+var flightScene = new FlightScene();
+var sceneRenderer = FlightRendererFactory.CreateSceneRenderer(flightScene);
+var runner = new EngineRunner(flightScene.Scene, sceneRenderer);
 
-var plane = new GameObject([
-    new RigidBody(mass: 1.0f),
-    new FlightInputController(),
-    new ForceApplier([
-        new GravityForce(GravityForce.MoonGravityAcceleration),
-        new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero),
-    ]),
-    new GizmoRenderer(),
-    new SphereRenderer(),
-]);
-
-var grid = new GameObject(
-    [new GridRenderer(), new GizmoRenderer(axisLength: 5.0f)]);
-
-var camera = new GameObject(
-    [new Camera(plane.Transform), new Follow(plane.Transform)]);
-
-var scene = new Scene([plane, grid, camera]);
-
-var planeBody = plane.GetComponent<RigidBody>()!;
-var activeCamera = camera.GetComponent<Camera>()!;
-var debugPanel = new DebugPanel(plane.Transform, planeBody, activeCamera);
-var sceneRenderer = new RaylibSceneRenderer(scene, activeCamera, debugPanel);
-
-RaylibSceneRenderer.Initialize();
-
-foreach (var gameObject in scene.GameObjects)
-foreach (var component in gameObject.GetComponents())
-    component.OnInitialize();
-
-while (!Raylib.WindowShouldClose())
-{
-    var deltaTime = Raylib.GetFrameTime();
-
-    foreach (var gameObject in scene.GameObjects)
-    foreach (var component in gameObject.GetComponents())
-        component.OnUpdate(deltaTime);
-
-    sceneRenderer.Render();
-}
-
-RaylibSceneRenderer.Close();
+runner.Run();

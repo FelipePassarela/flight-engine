@@ -4,7 +4,7 @@ using FlightEngine.Forces;
 using ImGuiNET;
 using Raylib_cs;
 
-namespace FlightEngine;
+namespace FlightEngine.Application;
 
 public class FlightInputController : Component
 {
