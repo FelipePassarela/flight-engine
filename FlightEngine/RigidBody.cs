@@ -24,7 +24,7 @@ public class RigidBody(float mass = 1.0f, float momentOfInertia = 1.0f) : Compon
     public bool HasInfiniteMass => InverseMass <= 0.0f;
     public Vector3 CenterOfMass { get; } = Vector3.Zero;
 
-    public bool UseGravity { get; set; }
+    public bool UseGravity { get; set; } = true;
 
     public override void OnUpdate(float deltaTime)
     {
