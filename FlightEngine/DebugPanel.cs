@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using FlightEngine.Rendering;
 using ImGuiNET;
 using Raylib_cs;
 using rlImGui_cs;
@@ -6,7 +7,7 @@ using Transform = FlightEngine.Core.Transform;
 
 namespace FlightEngine;
 
-public class DebugPanel(Transform transform, RigidBody body, Camera3D camera)
+public class DebugPanel(Transform transform, RigidBody body, Camera camera)
 {
     public void Render()
     {
@@ -68,7 +69,7 @@ public class DebugPanel(Transform transform, RigidBody body, Camera3D camera)
             transform.Orientation = Quaternion.Identity;
     }
 
-    private static void TrackCamera(Camera3D camera)
+    private static void TrackCamera(Camera camera)
     {
         var fov = camera.FovY;
         if (!ImGui.SliderFloat("FOV", ref fov, 20.0f, 100.0f))

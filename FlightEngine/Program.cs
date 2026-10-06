@@ -4,9 +4,8 @@ using FlightEngine.Core;
 using FlightEngine.Forces;
 using FlightEngine.Rendering;
 using Raylib_cs;
-using Transform = FlightEngine.Core.Transform;
 
-// TODO: Extract main loop and entities into a FlightEngine (or better name) class
+// TODO: Extract main loop and entities into a FlightApplication (or better name) class
 
 var plane = new GameObject(
     [
@@ -23,15 +22,17 @@ var plane = new GameObject(
     ]
 );
 var grid = new GameObject(
-    [
-        new GridRenderer(),
-        new GizmoRenderer(axisLength: 5.0f)
-    ]
+    [new GridRenderer(), new GizmoRenderer(axisLength: 5.0f)]
 );
-var scene = new Scene(camera: CreateCamera(plane.Transform), [plane, grid]);
+var camera = new GameObject(
+    [new Camera(plane.Transform), new Follow(plane.Transform)]
+);
+
+var activeCamera = camera.GetComponent<Camera>()!;
+var scene = new Scene(activeCamera: activeCamera, [plane, grid, camera]);
 
 var planeBody = plane.GetComponent<RigidBody>()!;
-var debugPanel = new DebugPanel(plane.Transform, planeBody, scene.Camera);
+var debugPanel = new DebugPanel(plane.Transform, planeBody, scene.ActiveCamera);
 var sceneRenderer = new SceneRenderer(scene, debugPanel);
 
 SceneRenderer.Initialize();
@@ -48,31 +49,7 @@ while (!Raylib.WindowShouldClose())
     foreach (var component in gameObject.GetComponents())
         component.OnUpdate(deltaTime);
 
-    TrackTransform(plane.Transform, ref scene.Camera);
-
     sceneRenderer.Render();
 }
 
 SceneRenderer.Close();
-return;
-
-Camera3D CreateCamera(Transform planeTransform)
-{
-    var cameraDisplacement = Vector3.One * 5.0f;
-    return new Camera3D
-    {
-        Position = planeTransform.Position + cameraDisplacement,
-        Target = planeTransform.Position,
-        Up = planeTransform.WorldUp,
-        FovY = 60.0f,
-        Projection = CameraProjection.Perspective
-    };
-}
-
-void TrackTransform(Transform transform, ref Camera3D camera)
-{
-    var cameraDisplacement = -transform.WorldForward * 9.0f + Vector3.UnitY * 5.0f;
-    camera.Position = transform.Position + cameraDisplacement;
-    camera.Target = transform.Position;
-    camera.Up = transform.WorldUp;
-}

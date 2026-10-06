@@ -20,7 +20,7 @@ public class SceneRenderer(Scene scene, DebugPanel? debugPanel)
         Raylib.BeginDrawing();
         Raylib.ClearBackground(Color.RayWhite);
 
-        Raylib.BeginMode3D(Scene.Camera);
+        Raylib.BeginMode3D(CreateRaylibCamera(Scene.ActiveCamera));
         RenderComponents();
         Raylib.EndMode3D();
 
@@ -47,5 +47,18 @@ public class SceneRenderer(Scene scene, DebugPanel? debugPanel)
     {
         rlImGui.Shutdown();
         Raylib.CloseWindow();
+    }
+
+    private static Camera3D CreateRaylibCamera(Camera camera)
+    {
+        var transform = camera.GameObject.Transform;
+        return new Camera3D
+        {
+            Position = transform.Position,
+            Target = transform.Position + transform.WorldForward,
+            Up = transform.WorldUp,
+            FovY = camera.FovY,
+            Projection = CameraProjection.Perspective
+        };
     }
 }

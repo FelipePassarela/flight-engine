@@ -1,12 +1,12 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using FlightEngine.Core;
-using Raylib_cs;
+using FlightEngine.Rendering;
 
 namespace FlightEngine;
 
 [method: SetsRequiredMembers]
-public class Scene(Camera3D camera, List<GameObject> gameObjects)
+public class Scene(Camera activeCamera, List<GameObject> gameObjects)
 {
-    public required Camera3D Camera = camera;
+    public required Camera ActiveCamera = activeCamera;
     public required List<GameObject> GameObjects = gameObjects;
 }
