@@ -26,7 +26,7 @@ public class RigidBody(float mass = 1.0f, float momentOfInertia = 1.0f) : Compon
 
     public bool UseGravity { get; set; }
 
-    public void Integrate(float deltaTime)
+    public override void OnUpdate(float deltaTime)
     {
         if (HasInfiniteMass)
         {

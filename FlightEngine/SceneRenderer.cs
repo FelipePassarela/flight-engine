@@ -32,7 +32,7 @@ public class SceneRenderer(Scene scene, DebugPanel? debugPanel)
     private void RenderComponents()
     {
         foreach (var gameObject in Scene.GameObjects)
-        foreach (var renderer in gameObject.GetComponents<Renderer>())
+        foreach (var renderer in gameObject.GetComponentsOfType<Renderer>())
             renderer.Render();
     }
 

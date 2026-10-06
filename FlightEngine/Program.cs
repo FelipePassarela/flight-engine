@@ -7,12 +7,17 @@ using Raylib_cs;
 using Transform = FlightEngine.Core.Transform;
 
 // TODO: Extract main loop and entities into a FlightEngine (or better name) class
-// TODO: Consider refactoring to use LifeCycle Callbacks pattern for components
 
 var plane = new GameObject(
     [
         new RigidBody(mass: 1.0f),
         new FlightInputController(),
+        new ForceApplier(
+            [
+                new GravityForce(GravityForce.MoonGravityAcceleration),
+                new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero)
+            ]
+        ),
         new GizmoRenderer(),
         new SphereRenderer()
     ]
@@ -31,20 +36,17 @@ var sceneRenderer = new SceneRenderer(scene, debugPanel);
 
 SceneRenderer.Initialize();
 
-plane.GetComponent<FlightInputController>()?.OnInitialize();
+foreach (var gameObject in scene.GameObjects)
+foreach (var component in gameObject.GetComponents())
+    component.OnInitialize();
 
 while (!Raylib.WindowShouldClose())
 {
-    plane.GetComponent<FlightInputController>()?.Update();
+    var deltaTime = Raylib.GetFrameTime();
 
-    var forces = new List<ForceGenerator>
-    {
-        new GravityForce(GravityForce.MoonGravityAcceleration),
-        new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero)
-    };
-
-    planeBody.AddForces(forces);
-    planeBody.Integrate(Raylib.GetFrameTime());
+    foreach (var gameObject in scene.GameObjects)
+    foreach (var component in gameObject.GetComponents())
+        component.OnUpdate(deltaTime);
 
     TrackTransform(plane.Transform, ref scene.Camera);
 

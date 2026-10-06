@@ -55,5 +55,7 @@ public class GameObject
 
     public T? GetComponent<T>() where T : Component => _components.OfType<T>().FirstOrDefault();
 
-    public IEnumerable<T> GetComponents<T>() where T : Component => _components.OfType<T>();
+    public IEnumerable<Component> GetComponents() => _components.AsReadOnly();
+
+    public IEnumerable<T> GetComponentsOfType<T>() where T : Component => _components.OfType<T>();
 }

@@ -10,13 +10,13 @@ public class FlightInputController : Component
 {
     private RigidBody _body = null!;
 
-    public void OnInitialize()
+    public override void OnInitialize()
     {
         _body = GameObject.GetComponent<RigidBody>() ??
                 throw new InvalidOperationException("FlightInputController requires a RigidBody component.");
     }
 
-    public void Update()
+    public override void OnUpdate(float deltaTime)
     {
         if (ImGui.GetIO().WantCaptureKeyboard) return;
 
