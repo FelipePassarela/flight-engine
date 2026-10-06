@@ -1,4 +1,4 @@
-﻿namespace FlightEngine;
+﻿namespace FlightEngine.Rendering;
 
 public static class AppInfo
 {

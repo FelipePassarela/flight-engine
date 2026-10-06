@@ -1,11 +1,10 @@
 ﻿using System.Numerics;
-using FlightEngine.Rendering;
 using ImGuiNET;
 using Raylib_cs;
 using rlImGui_cs;
 using Transform = FlightEngine.Core.Transform;
 
-namespace FlightEngine;
+namespace FlightEngine.Rendering;
 
 public class DebugPanel(Transform transform, RigidBody body, Camera camera)
 {

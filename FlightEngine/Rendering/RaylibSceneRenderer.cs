@@ -1,10 +1,10 @@
-﻿using Raylib_cs;
+﻿using FlightEngine.Rendering.Primitives;
+using Raylib_cs;
 using rlImGui_cs;
-using FlightEngine.Rendering;
 
-namespace FlightEngine;
+namespace FlightEngine.Rendering;
 
-public class SceneRenderer(Scene scene, DebugPanel? debugPanel)
+public class RaylibSceneRenderer(Scene scene, DebugPanel? debugPanel)
 {
     private Scene Scene { get; } = scene;
 

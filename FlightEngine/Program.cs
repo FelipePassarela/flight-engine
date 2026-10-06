@@ -3,6 +3,7 @@ using FlightEngine;
 using FlightEngine.Core;
 using FlightEngine.Forces;
 using FlightEngine.Rendering;
+using FlightEngine.Rendering.Primitives;
 using Raylib_cs;
 
 // TODO: Extract main loop and entities into a FlightApplication (or better name) class
@@ -29,9 +30,9 @@ var scene = new Scene(activeCamera: activeCamera, [plane, grid, camera]);
 
 var planeBody = plane.GetComponent<RigidBody>()!;
 var debugPanel = new DebugPanel(plane.Transform, planeBody, scene.ActiveCamera);
-var sceneRenderer = new SceneRenderer(scene, debugPanel);
+var sceneRenderer = new RaylibSceneRenderer(scene, debugPanel);
 
-SceneRenderer.Initialize();
+RaylibSceneRenderer.Initialize();
 
 foreach (var gameObject in scene.GameObjects)
 foreach (var component in gameObject.GetComponents())
@@ -48,4 +49,4 @@ while (!Raylib.WindowShouldClose())
     sceneRenderer.Render();
 }
 
-SceneRenderer.Close();
+RaylibSceneRenderer.Close();

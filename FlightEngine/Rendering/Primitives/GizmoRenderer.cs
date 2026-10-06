@@ -1,6 +1,6 @@
 ﻿using Raylib_cs;
 
-namespace FlightEngine.Rendering;
+namespace FlightEngine.Rendering.Primitives;
 
 public class GizmoRenderer(float axisLength = 3.0f) : Renderer
 {
