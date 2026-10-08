@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
-using FlightEngine.Forces;
 
 namespace FlightEngine.Physics;
 
@@ -71,21 +70,9 @@ public class RigidBody : Component
         _angularMotion.StopMotion();
     }
 
-    public void AddForce(ForceGenerator generator)
+    public void AddForce(Vector3 worldForce, Vector3 localApplicationPoint)
     {
-        if (!UseGravity && generator is GravityForce)
-            return;
-
-        var worldForce = generator.CalculateWorldForce(this);
         _linearMotion.AddForce(worldForce);
-        _angularMotion.AddTorque(worldForce, generator.LocalApplicationPoint, Transform.Orientation);
-    }
-
-    public void AddForces(IEnumerable<ForceGenerator> forces)
-    {
-        foreach (var force in forces)
-        {
-            AddForce(force);
-        }
+        _angularMotion.AddTorque(worldForce, localApplicationPoint, Transform.Orientation);
     }
 }

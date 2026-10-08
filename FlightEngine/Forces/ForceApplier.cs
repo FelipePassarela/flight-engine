@@ -15,6 +15,10 @@ public class ForceApplier(IEnumerable<ForceGenerator> forces) : Component
 
     public override void OnUpdate(float deltaTime)
     {
-        _body.AddForces(forces);
+        foreach (var generator in forces)
+        {
+            var worldForce = generator.CalculateWorldForce(_body);
+            _body.AddForce(worldForce, generator.LocalApplicationPoint);
+        }
     }
 }

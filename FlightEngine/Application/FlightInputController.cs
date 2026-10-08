@@ -38,7 +38,8 @@ public class FlightInputController : Component
 
         const float forceMagnitude = 10.0f;
         var force = new ThrustForce(forceDirection, forceMagnitude);
-        _body.AddForce(force);
+        var worldForce = force.CalculateWorldForce(_body);
+        _body.AddForce(worldForce, force.LocalApplicationPoint);
     }
 
     private void HandleRotationInput()
@@ -60,6 +61,7 @@ public class FlightInputController : Component
         }
 
         var rotationForce = new ThrustForce(-transform.LocalForward, forceMagnitude, localApplicationPoint);
-        _body.AddForce(rotationForce);
+        var worldForce = rotationForce.CalculateWorldForce(_body);
+        _body.AddForce(worldForce, rotationForce.LocalApplicationPoint);
     }
 }
