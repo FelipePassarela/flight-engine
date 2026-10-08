@@ -1,6 +1,7 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
 using FlightEngine.Forces;
+using FlightEngine.Physics;
 using FlightEngine.Rendering;
 using FlightEngine.Rendering.Primitives;
 

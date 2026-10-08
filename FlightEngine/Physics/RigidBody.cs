@@ -2,7 +2,7 @@
 using FlightEngine.Core;
 using FlightEngine.Forces;
 
-namespace FlightEngine;
+namespace FlightEngine.Physics;
 
 public class RigidBody(float mass = 1.0f, float momentOfInertia = 1.0f) : Component
 {
@@ -11,18 +11,31 @@ public class RigidBody(float mass = 1.0f, float momentOfInertia = 1.0f) : Compon
     private Vector3 _accumulatedForce = Vector3.Zero;
 
     public Vector3 AngularVelocity { get; set; } = Vector3.Zero;
-    public float MomentOfInertia { get; set; } = momentOfInertia; // TODO: Change to tensor of inertia for complex shape
     private Vector3 _accumulatedTorque = Vector3.Zero;
+
+    private readonly MassProperties _massProperties = new(mass, momentOfInertia, Vector3.Zero);
+
+    public float MomentOfInertia
+    {
+        get => _massProperties.MomentOfInertia;
+        set => _massProperties.MomentOfInertia = value;
+    }
 
     public float InverseMass
     {
-        get;
-        set => field = value > 0.0f ? value : 0.0f;
-    } = mass > 0.0f ? 1.0f / mass : 0.0f;
+        get => _massProperties.InverseMass;
+        set => _massProperties.InverseMass = value;
+    }
 
-    public float Mass => 1.0f / InverseMass; // For convenience
-    public bool HasInfiniteMass => InverseMass <= 0.0f;
-    public Vector3 CenterOfMass { get; } = Vector3.Zero;
+    public float Mass
+    {
+        get => _massProperties.Mass;
+        set => _massProperties.Mass = value;
+    }
+
+    public bool HasInfiniteMass => _massProperties.HasInfiniteMass;
+
+    public Vector3 CenterOfMass => _massProperties.CenterOfMass;
 
     public bool UseGravity { get; set; } = true;
 
