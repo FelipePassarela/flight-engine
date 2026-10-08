@@ -28,8 +28,16 @@ public class RigidBodyDebugSection(RigidBody body) : DebugSection
             return;
 
         var inverseMass = body.InverseMass;
-        if (ImGui.DragFloat("Inverse mass", ref inverseMass, 0.01f))
-            body.InverseMass = inverseMass;
+        var dragFloat = ImGui.DragFloat(
+            "Inverse mass",
+            v: ref inverseMass,
+            v_speed: 0.01f,
+            v_min: 0.0f,
+            v_max: float.MaxValue,
+            format: "%.3f",
+            flags: ImGuiSliderFlags.AlwaysClamp);
+        if (dragFloat) body.InverseMass = inverseMass;
+        
         ImGui.Text($"Mass: {body.Mass:F3}");
 
         var velocity = body.Velocity;

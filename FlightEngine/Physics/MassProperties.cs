@@ -2,7 +2,7 @@
 
 namespace FlightEngine.Physics;
 
-public class MassProperties
+internal class MassProperties
 {
     public MassProperties(float mass, float momentOfInertia, Vector3 centerOfMass)
     {
