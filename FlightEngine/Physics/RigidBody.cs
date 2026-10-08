@@ -16,7 +16,6 @@ public class RigidBody : Component
     private readonly AngularMotion _angularMotion;
     private readonly LinearMotion _linearMotion;
     private readonly MassProperties _massProperties;
-    public bool UseGravity { get; set; } = true;
 
     public Vector3 AngularVelocity
     {
