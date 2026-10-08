@@ -8,19 +8,18 @@ public class OrientationDebugSection(Transform transform) : DebugSection
 {
     public override void Render()
     {
-        if (!ImGui.CollapsingHeader("Orientation", ImGuiTreeNodeFlags.DefaultOpen))
+        if (!RenderHeader("Orientation"))
             return;
 
         var orientation = transform.Orientation;
-        ImGui.Text($"Quaternion: ({orientation.X:F4}, {orientation.Y:F4}, " +
-                   $"{orientation.Z:F4}, {orientation.W:F4})");
-        ImGui.Text($"Norma: {orientation.Length():F6}");
+        RenderText($"Quaternion: ({orientation.X:F4}, {orientation.Y:F4}, {orientation.Z:F4}, {orientation.W:F4})");
+        RenderText($"Norma: {orientation.Length():F6}");
 
         RenderVector(transform.WorldForward, "World Forward");
         RenderVector(transform.WorldRight, "World Right");
         RenderVector(transform.WorldUp, "World Up");
 
-        if (ImGui.Button("Reset orientation"))
+        if (RenderButton("Reset orientation"))
             transform.Orientation = Quaternion.Identity;
     }
 }

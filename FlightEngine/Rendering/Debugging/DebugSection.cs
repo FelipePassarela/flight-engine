@@ -11,4 +11,19 @@ public abstract class DebugSection
     {
         ImGui.Text($"{label}: ({value.X:F4}, {value.Y:F4}, {value.Z:F4})");
     }
+
+    protected static void RenderText(string fmt)
+    {
+        ImGui.Text(fmt);
+    }
+
+    protected static bool RenderHeader(string label)
+    {
+        return ImGui.CollapsingHeader(label, ImGuiTreeNodeFlags.DefaultOpen);
+    }
+
+    protected static bool RenderButton(string label)
+    {
+        return ImGui.Button(label);
+    }
 }

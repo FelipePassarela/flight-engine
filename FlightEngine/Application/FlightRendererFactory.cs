@@ -1,6 +1,7 @@
 ﻿using FlightEngine.Physics;
 using FlightEngine.Rendering;
 using FlightEngine.Rendering.Debugging;
+using FlightEngine.Rendering.Debugging.RigidBody;
 
 namespace FlightEngine.Application;
 
