@@ -31,4 +31,13 @@ public class Transform : Component
 
         Orientation = Quaternion.CreateFromRotationMatrix(rotationMatrix);
     }
+
+    public Vector3 TransformPoint(Vector3 point)
+    {
+        var scaledPoint = point * Scale;
+        var rotatedPoint = Vector3.Transform(scaledPoint, Orientation);
+        return Position + rotatedPoint;
+    }
+
+    public Vector3 TransformDirection(Vector3 direction) => Vector3.Transform(direction, Orientation);
 }

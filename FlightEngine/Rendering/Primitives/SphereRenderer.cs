@@ -3,12 +3,12 @@ using Raylib_cs;
 
 namespace FlightEngine.Rendering.Primitives;
 
-public class SphereRenderer : Renderer
+public class SphereRenderer(float radius = 1.0f) : Renderer
 {
     public override void Render()
     {
         var transform = GameObject.Transform;
-        Raylib.DrawSphere(transform.Position + Vector3.UnitY, 1.0f, Color.Red);
-        Raylib.DrawSphereWires(transform.Position + Vector3.UnitY, 1.0f, 16, 16, Color.Maroon);
+        Raylib.DrawSphere(transform.Position, radius, Color.Red);
+        Raylib.DrawSphereWires(transform.Position, radius, 16, 16, Color.Maroon);
     }
 }

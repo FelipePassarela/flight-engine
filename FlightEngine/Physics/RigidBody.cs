@@ -93,4 +93,11 @@ public class RigidBody : Component
         _linearMotion.AddForce(worldForce);
         _angularMotion.AddTorque(worldForce, localApplicationPoint, Transform.Orientation);
     }
+    
+    public Vector3 GetVelocityAtPoint(Vector3 localPoint)
+    {
+        var displacement = Transform.TransformDirection(localPoint - CenterOfMass);
+        var angularVelocityAtPoint = Vector3.Cross(AngularVelocity, displacement);
+        return Velocity + angularVelocityAtPoint;
+    }
 }

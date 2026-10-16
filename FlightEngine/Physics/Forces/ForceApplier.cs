@@ -2,11 +2,12 @@
 
 namespace FlightEngine.Physics.Forces;
 
-public class ForceApplier(IEnumerable<ForceGenerator> forces, bool useGravity = true) : Component
+public class ForceApplier(bool useGravity = true) : Component
 {
-    private RigidBody _body = null!;
+    private readonly List<ForceGenerator> _forces = [];
     public bool UseGravity { get; set; } = useGravity;
-    
+    private RigidBody _body = null!;
+
     public override void OnInitialize()
     {
         _body = GameObject.GetComponent<RigidBody>() ??
@@ -15,18 +16,25 @@ public class ForceApplier(IEnumerable<ForceGenerator> forces, bool useGravity = 
 
     public override void OnUpdate(float deltaTime)
     {
-        foreach (var generator in forces)
+        foreach (var generator in _forces)
         {
-            if (generator is GravityForce && !UseGravity)
-                continue;
-            
             var worldForce = generator.CalculateWorldForce(_body);
             _body.AddForce(worldForce, generator.LocalApplicationPoint);
         }
+
+        _forces.Clear();
     }
-    
+
+    public void AddForce(ForceGenerator force)
+    {
+        if (force is GravityForce && !UseGravity)
+            return;
+
+        _forces.Add(force);
+    }
+
     public ForceGenerator? GetForceGenerator<T>() where T : ForceGenerator
     {
-        return forces.OfType<T>().FirstOrDefault();
+        return _forces.OfType<T>().FirstOrDefault();
     }
 }

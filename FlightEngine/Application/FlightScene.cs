@@ -24,12 +24,11 @@ public class FlightScene
         new([
             new RigidBody(mass: 1.0f),
             new FlightInputController(),
-            new ForceApplier([
-                new GravityForce(GravityForce.MoonGravityAcceleration),
-                new DragForce(referenceArea: 16.0f, windVelocity: Vector3.Zero),
-            ]),
+            new ForceApplier(),
+            new Spring(stiffness: 10.0f, localAnchor: Vector3.UnitY),
             new GizmoRenderer(),
-            new SphereRenderer(),
+            new SphereRenderer(radius: 0.4f),
+            new SpringRenderer()
         ]);
 
     private static GameObject CreateGrid() => new([new GridRenderer(), new GizmoRenderer(axisLength: 5.0f)]);

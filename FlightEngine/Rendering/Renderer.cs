@@ -1,6 +1,6 @@
 ﻿using FlightEngine.Core;
 
-namespace FlightEngine.Rendering.Primitives;
+namespace FlightEngine.Rendering;
 
 public abstract class Renderer : Component
 {
