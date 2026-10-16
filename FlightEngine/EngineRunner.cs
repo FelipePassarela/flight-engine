@@ -1,4 +1,5 @@
 ﻿using FlightEngine.Core;
+using FlightEngine.Physics;
 using FlightEngine.Rendering;
 using Raylib_cs;
 
@@ -6,6 +7,8 @@ namespace FlightEngine;
 
 public class EngineRunner(Scene scene, RaylibSceneRenderer sceneRenderer)
 {
+    private readonly PhysicsWorld _physicsWorld = new(scene.GetComponents<RigidBody>());
+
     public void Run()
     {
         Initialize();
@@ -16,13 +19,12 @@ public class EngineRunner(Scene scene, RaylibSceneRenderer sceneRenderer)
     private void Initialize()
     {
         sceneRenderer.Initialize();
-        InitializeGameObjects();
+        InitializeComponents();
     }
 
-    private void InitializeGameObjects()
+    private void InitializeComponents()
     {
-        foreach (var gameObject in scene.GameObjects)
-        foreach (var component in gameObject.GetComponents())
+        foreach (var component in scene.GetComponents())
             component.OnInitialize();
     }
 
@@ -30,15 +32,16 @@ public class EngineRunner(Scene scene, RaylibSceneRenderer sceneRenderer)
     {
         while (!Raylib.WindowShouldClose())
         {
-            UpdateGameObjects(Raylib.GetFrameTime());
+            var deltaTime = Raylib.GetFrameTime();
+            UpdateComponents(deltaTime);
+            _physicsWorld.Step(deltaTime);
             sceneRenderer.Render();
         }
     }
 
-    private void UpdateGameObjects(float deltaTime)
+    private void UpdateComponents(float deltaTime)
     {
-        foreach (var gameObject in scene.GameObjects)
-        foreach (var component in gameObject.GetComponents())
+        foreach (var component in scene.GetComponents())
             component.OnUpdate(deltaTime);
     }
 }

@@ -35,8 +35,7 @@ public class RaylibSceneRenderer(
 
     private void RenderComponents()
     {
-        foreach (var gameObject in scene.GameObjects)
-        foreach (var renderer in gameObject.GetComponentsOfType<Renderer>())
+        foreach (var renderer in scene.GetComponents<Renderer>())
             renderer.Render();
     }
 

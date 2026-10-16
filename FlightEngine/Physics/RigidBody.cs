@@ -52,7 +52,7 @@ public class RigidBody : Component
 
     public Vector3 CenterOfMass => _massProperties.CenterOfMass;
 
-    public override void OnUpdate(float deltaTime)
+    public void IntegrateVelocities(float deltaTime)
     {
         if (HasInfiniteMass)
         {
@@ -60,8 +60,26 @@ public class RigidBody : Component
             return;
         }
 
-        _linearMotion.Integrate(Transform, deltaTime);
-        _angularMotion.Integrate(Transform, deltaTime);
+        _linearMotion.IntegrateVelocity(deltaTime);
+        _angularMotion.IntegrateVelocity(deltaTime);
+    }
+
+    public void IntegrateTransform(float deltaTime)
+    {
+        if (HasInfiniteMass)
+        {
+            StopMotion();
+            return;
+        }
+
+        _linearMotion.IntegrateTransform(Transform, deltaTime);
+        _angularMotion.IntegrateTransform(Transform, deltaTime);
+    }
+
+    public void ClearAccumulators()
+    {
+        _linearMotion.ClearAccumulators();
+        _angularMotion.ClearAccumulators();
     }
 
     public void StopMotion()

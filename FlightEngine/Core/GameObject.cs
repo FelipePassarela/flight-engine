@@ -57,5 +57,5 @@ public class GameObject
 
     public IEnumerable<Component> GetComponents() => _components.AsReadOnly();
 
-    public IEnumerable<T> GetComponentsOfType<T>() where T : Component => _components.OfType<T>();
+    public IEnumerable<T> GetComponents<T>() where T : Component => _components.OfType<T>();
 }
