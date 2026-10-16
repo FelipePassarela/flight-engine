@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using FlightEngine.Forces;
+using FlightEngine.Physics.Forces;
 using ImGuiNET;
 
 namespace FlightEngine.Rendering.Debugging.RigidBody;

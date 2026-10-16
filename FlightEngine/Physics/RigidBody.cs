@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
+using FlightEngine.Physics.Motion;
 
 namespace FlightEngine.Physics;
 

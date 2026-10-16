@@ -1,6 +1,6 @@
 ﻿using FlightEngine.Core;
 
-namespace FlightEngine.Physics;
+namespace FlightEngine.Physics.Motion;
 
 internal interface IMotion
 {

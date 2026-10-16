@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using FlightEngine.Physics;
 
-namespace FlightEngine.Forces;
+namespace FlightEngine.Physics.Forces;
 
 public class ThrustForce(
     Vector3 localDirection,

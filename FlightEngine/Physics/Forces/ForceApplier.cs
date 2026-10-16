@@ -1,7 +1,6 @@
 ﻿using FlightEngine.Core;
-using FlightEngine.Physics;
 
-namespace FlightEngine.Forces;
+namespace FlightEngine.Physics.Forces;
 
 public class ForceApplier(IEnumerable<ForceGenerator> forces, bool useGravity = true) : Component
 {

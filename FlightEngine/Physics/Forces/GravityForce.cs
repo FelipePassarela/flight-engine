@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
-using FlightEngine.Physics;
 
-namespace FlightEngine.Forces;
+namespace FlightEngine.Physics.Forces;
 
 public class GravityForce(Vector3 gravityAcceleration) : ForceGenerator
 {

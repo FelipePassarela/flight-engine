@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
 
-namespace FlightEngine.Physics;
+namespace FlightEngine.Physics.Motion;
 
 internal class LinearMotion(MassProperties massProperties) : IMotion
 {
