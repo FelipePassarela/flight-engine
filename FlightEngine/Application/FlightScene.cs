@@ -25,7 +25,8 @@ public class FlightScene
             new RigidBody(mass: 1.0f),
             new FlightInputController(),
             new ForceApplier(),
-            new Spring(stiffness: 10.0f, localAnchor: Vector3.UnitY),
+            new Spring(otherTransform: new Transform(), stiffness: 10.0f, thisAnchorOffset: Vector3.UnitY),
+            new Gravity(Gravity.EarthGravityAcceleration),
             new GizmoRenderer(),
             new SphereRenderer(radius: 0.4f),
             new SpringRenderer()

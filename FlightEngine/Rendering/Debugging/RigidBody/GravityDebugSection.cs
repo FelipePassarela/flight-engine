@@ -1,5 +1,5 @@
 ﻿using System.Numerics;
-using FlightEngine.Physics.Forces;
+using FlightEngine.Physics;
 using ImGuiNET;
 
 namespace FlightEngine.Rendering.Debugging.RigidBody;
@@ -12,12 +12,7 @@ public class GravityDebugSection : DebugSection
     public GravityDebugSection(Physics.RigidBody body)
     {
         _body = body;
-
-        var forceApplier = GetForceApplier();
-        var gravity = GetGravityForce(forceApplier);
-
-        _originalGravityAcceleration =
-            gravity?.GravityAcceleration ?? Vector3.Zero;
+        _originalGravityAcceleration = GetGravityComponent()?.GravityAcceleration ?? Vector3.Zero;
     }
 
     public override void Render()
@@ -25,39 +20,29 @@ public class GravityDebugSection : DebugSection
         if (!RenderHeader("Gravity"))
             return;
 
-        var forceApplier = GetForceApplier();
-        if (forceApplier is null)
-            return;
-
-        RenderUseGravityEditor(forceApplier);
-
-        var gravity = GetGravityForce(forceApplier);
+        var gravity = GetGravityComponent();
         if (gravity is null)
             return;
 
+        RenderUseGravityEditor(gravity);
         RenderGravityStrengthEditor(gravity);
         RenderResetGravityButton(gravity);
     }
 
-    private ForceApplier? GetForceApplier()
+    private Gravity? GetGravityComponent()
     {
-        return _body.GameObject.GetComponent<ForceApplier>();
+        return _body.GameObject.GetComponent<Gravity>();
     }
 
-    private static GravityForce? GetGravityForce(ForceApplier? forceApplier)
+    private static void RenderUseGravityEditor(Gravity gravity)
     {
-        return (GravityForce?)forceApplier?.GetForceGenerator<GravityForce>();
-    }
-
-    private static void RenderUseGravityEditor(ForceApplier forceApplier)
-    {
-        var useGravity = forceApplier.UseGravity;
+        var useGravity = gravity.Active;
         var useGravityChanged = ImGui.Checkbox("Use gravity", ref useGravity);
         if (useGravityChanged)
-            forceApplier.UseGravity = useGravity;
+            gravity.Active = useGravity;
     }
 
-    private void RenderGravityStrengthEditor(GravityForce gravity)
+    private void RenderGravityStrengthEditor(Gravity gravity)
     {
         var gravityAcceleration = gravity.GravityAcceleration;
         var gravityStrength = gravityAcceleration.Length();
@@ -89,7 +74,7 @@ public class GravityDebugSection : DebugSection
         return -Vector3.UnitY;
     }
 
-    private void RenderResetGravityButton(GravityForce gravity)
+    private void RenderResetGravityButton(Gravity gravity)
     {
         if (RenderButton("Reset gravity"))
             gravity.GravityAcceleration = _originalGravityAcceleration;

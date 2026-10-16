@@ -2,10 +2,9 @@
 
 namespace FlightEngine.Physics.Forces;
 
-public class ForceApplier(bool useGravity = true) : Component
+public class ForceApplier : Component
 {
     private readonly List<ForceGenerator> _forces = [];
-    public bool UseGravity { get; set; } = useGravity;
     private RigidBody _body = null!;
 
     public override void OnInitialize()
@@ -27,9 +26,6 @@ public class ForceApplier(bool useGravity = true) : Component
 
     public void AddForce(ForceGenerator force)
     {
-        if (force is GravityForce && !UseGravity)
-            return;
-
         _forces.Add(force);
     }
 
