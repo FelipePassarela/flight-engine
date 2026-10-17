@@ -1,4 +1,5 @@
-﻿using FlightEngine.Core;
+﻿using System.Numerics;
+using FlightEngine.Core;
 
 namespace FlightEngine.Physics.Forces;
 
@@ -13,15 +14,23 @@ public class ForceApplier : Component
                 throw new InvalidOperationException("ForceApplier requires a RigidBody component.");
     }
 
-    public override void OnUpdate(float deltaTime)
+    public void ApplyForces()
     {
         foreach (var generator in _forces)
         {
-            var worldForce = generator.CalculateWorldForce(_body);
-            _body.AddForce(worldForce, generator.LocalApplicationPoint);
+            var force = generator.CalculateWorldForce();
+            _body.AddForce(force, generator.LocalApplicationPoint);
+            ApplyReactionForce(generator, force);
         }
 
         _forces.Clear();
+    }
+
+    private static void ApplyReactionForce(ForceGenerator generator, Vector3 force)
+    {
+        if (generator is not PairForceGenerator pairGenerator) return;
+        var otherBody = pairGenerator.OtherBody;
+        otherBody.AddForce(-force, pairGenerator.OtherLocalApplicationPoint);
     }
 
     public void AddForce(ForceGenerator force)

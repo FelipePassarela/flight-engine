@@ -2,9 +2,11 @@
 
 namespace FlightEngine.Physics.Forces;
 
-public class GravityForce(Vector3 gravityAcceleration) : ForceGenerator
+public class GravityForce(RigidBody body, Vector3 gravityAcceleration) : ForceGenerator
 {
-    public override Vector3 CalculateWorldForce(RigidBody body)
+    public override RigidBody Body => body;
+
+    public override Vector3 CalculateWorldForce()
     {
         if (body.HasInfiniteMass)
             return Vector3.Zero;

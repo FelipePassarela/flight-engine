@@ -1,9 +1,14 @@
-﻿namespace FlightEngine.Physics;
+﻿using FlightEngine.Physics.Forces;
 
-public class PhysicsWorld(IEnumerable<RigidBody> bodies)
+namespace FlightEngine.Physics;
+
+public class PhysicsWorld(IEnumerable<RigidBody> bodies, IEnumerable<ForceApplier> forceAppliers)
 {
     public void Step(float deltaTime)
     {
+        foreach (var forceApplier in forceAppliers)
+            forceApplier.ApplyForces();
+
         foreach (var body in bodies)
             body.IntegrateVelocities(deltaTime);
 

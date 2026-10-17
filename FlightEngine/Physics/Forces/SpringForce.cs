@@ -3,28 +3,39 @@
 namespace FlightEngine.Physics.Forces;
 
 public class SpringForce(
+    RigidBody thisBody,
+    RigidBody otherBody,
+    Vector3 thisLocalAnchor,
+    Vector3 otherLocalAnchor,
     float stiffness,
     float damping,
-    float restLength,
-    Vector3 thisLocalAnchor,
-    Vector3 otherWorldAnchor) : ForceGenerator
+    float restLength) : PairForceGenerator
 {
-    private const float MinLength = 1e-6f;
+    public override RigidBody ThisBody => thisBody;
+    public override RigidBody OtherBody => otherBody;
     public override Vector3 LocalApplicationPoint => thisLocalAnchor;
+    public override Vector3 OtherLocalApplicationPoint => otherLocalAnchor;
+    private const float MinLength = 1e-6f;
 
-    public override Vector3 CalculateWorldForce(RigidBody body)
+    public override Vector3 CalculateWorldForceOnThis()
     {
-        var thisWorldAnchor = body.Transform.TransformPoint(thisLocalAnchor);
-        var displacement = otherWorldAnchor - thisWorldAnchor;
+        var displacement = CalculateAnchorsDisplacement();
         var length = displacement.Length();
 
         if (length < MinLength) return Vector3.Zero;
 
         var springDirection = displacement / length;
-        var elasticForce = CalculateElasticStrength(length);
-        var dampingForce = CalculateDampingStrength(body, springDirection);
+        var elasticStrength = CalculateElasticStrength(length);
+        var dampingStrength = CalculateDampingStrength(springDirection);
 
-        return (elasticForce + dampingForce) * springDirection;
+        return (elasticStrength + dampingStrength) * springDirection;
+    }
+
+    private Vector3 CalculateAnchorsDisplacement()
+    {
+        var thisWorldAnchor = thisBody.Transform.TransformPoint(thisLocalAnchor);
+        var otherWorldAnchor = otherBody.Transform.TransformPoint(otherLocalAnchor);
+        return otherWorldAnchor - thisWorldAnchor;
     }
 
     private float CalculateElasticStrength(float length)
@@ -33,10 +44,13 @@ public class SpringForce(
         return stiffness * extension;
     }
 
-    private float CalculateDampingStrength(RigidBody body, Vector3 springDirection)
+    private float CalculateDampingStrength(Vector3 springDirection)
     {
-        var anchorVelocity = body.GetVelocityAtPoint(thisLocalAnchor);
-        var speedAlongSpring = Vector3.Dot(anchorVelocity, springDirection);
-        return -speedAlongSpring * damping;
+        var otherVelocity = otherBody.GetVelocityAtPoint(otherLocalAnchor);
+        var thisVelocity = thisBody.GetVelocityAtPoint(thisLocalAnchor);
+        var relativeVelocity = otherVelocity - thisVelocity;
+
+        var separationSpeed = Vector3.Dot(relativeVelocity, springDirection);
+        return separationSpeed * damping;
     }
 }

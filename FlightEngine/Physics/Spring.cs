@@ -5,33 +5,43 @@ using FlightEngine.Physics.Forces;
 namespace FlightEngine.Physics;
 
 public class Spring(
-    Transform otherTransform,
+    RigidBody otherBody,
     float stiffness = 10.0f,
     float damping = 1.0f,
     float restLength = 1.0f,
-    Vector3 thisAnchorOffset = default,
-    Vector3 otherAnchorOffset = default) : Component
+    Vector3 thisLocalAnchor = default,
+    Vector3 otherLocalAnchor = default) : Component
 {
     public float Stiffness { get; set; } = stiffness;
     public float Damping { get; set; } = damping;
     public float RestLength { get; set; } = restLength;
-    public Vector3 ThisAnchorOffset { get; set; } = thisAnchorOffset;
-    public Vector3 OtherAnchorOffset { get; set; } = otherAnchorOffset;
+    public Vector3 ThisLocalAnchor { get; set; } = thisLocalAnchor;
+    public Vector3 OtherLocalAnchor { get; set; } = otherLocalAnchor;
     private ForceApplier _forceApplier = null!;
+    private RigidBody _thisBody = null!;
 
-    public Vector3 ThisWorldAnchor => GameObject.Transform.TransformPoint(ThisAnchorOffset);
+    public Vector3 ThisWorldAnchor => GameObject.Transform.TransformPoint(ThisLocalAnchor);
 
-    public Vector3 OtherWorldAnchor => otherTransform.TransformPoint(OtherAnchorOffset);
+    public Vector3 OtherWorldAnchor => otherBody.Transform.TransformPoint(OtherLocalAnchor);
 
     public override void OnInitialize()
     {
         _forceApplier = GameObject.GetComponent<ForceApplier>() ??
                         throw new InvalidOperationException("Spring requires a ForceApplier component.");
+        _thisBody = GameObject.GetComponent<RigidBody>() ??
+                    throw new InvalidOperationException("Spring requires a RigidBody component.");
     }
 
     public override void OnUpdate(float deltaTime)
     {
-        var springForce = new SpringForce(Stiffness, Damping, RestLength, ThisAnchorOffset, OtherWorldAnchor);
+        var springForce = new SpringForce(
+            _thisBody,
+            otherBody,
+            ThisLocalAnchor,
+            OtherLocalAnchor,
+            Stiffness,
+            Damping,
+            RestLength);
         _forceApplier.AddForce(springForce);
     }
 }

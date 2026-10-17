@@ -37,9 +37,8 @@ public class FlightInputController : Component
         if (Raylib.IsKeyDown(KeyboardKey.Space)) forceDirection += transform.LocalUp;
 
         const float forceMagnitude = 10.0f;
-        var force = new ThrustForce(forceDirection, forceMagnitude);
-        var worldForce = force.CalculateWorldForce(_body);
-        _body.AddForce(worldForce, force.LocalApplicationPoint);
+        var force = new ThrustForce(_body, forceDirection, forceMagnitude);
+        _body.AddForce(force.CalculateWorldForce(), force.LocalApplicationPoint);
     }
 
     private void HandleRotationInput()
@@ -60,8 +59,7 @@ public class FlightInputController : Component
             forceMagnitude = 5.0f;
         }
 
-        var rotationForce = new ThrustForce(-transform.LocalForward, forceMagnitude, localApplicationPoint);
-        var worldForce = rotationForce.CalculateWorldForce(_body);
-        _body.AddForce(worldForce, rotationForce.LocalApplicationPoint);
+        var rotationForce = new ThrustForce(_body, -transform.LocalForward, forceMagnitude, localApplicationPoint);
+        _body.AddForce(rotationForce.CalculateWorldForce(), rotationForce.LocalApplicationPoint);
     }
 }

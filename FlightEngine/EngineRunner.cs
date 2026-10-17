@@ -1,5 +1,6 @@
 ﻿using FlightEngine.Core;
 using FlightEngine.Physics;
+using FlightEngine.Physics.Forces;
 using FlightEngine.Rendering;
 using Raylib_cs;
 
@@ -7,7 +8,8 @@ namespace FlightEngine;
 
 public class EngineRunner(Scene scene, RaylibSceneRenderer sceneRenderer)
 {
-    private readonly PhysicsWorld _physicsWorld = new(scene.GetComponents<RigidBody>());
+    private readonly PhysicsWorld _physicsWorld =
+        new(scene.GetComponents<RigidBody>(), scene.GetComponents<ForceApplier>());
 
     public void Run()
     {

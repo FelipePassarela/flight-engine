@@ -12,15 +12,18 @@ public class Gravity(Vector3 gravityAcceleration = default, bool active = true) 
     public Vector3 GravityAcceleration { get; set; } = gravityAcceleration;
     public bool Active { get; set; } = active;
     private ForceApplier _forceApplier = null!;
+    private RigidBody _body = null!;
 
     public override void OnInitialize()
     {
+        _body = GameObject.GetComponent<RigidBody>() ??
+                throw new InvalidOperationException("Gravity component requires a RigidBody component.");
         _forceApplier = GameObject.GetComponent<ForceApplier>() ??
                         throw new InvalidOperationException("Gravity component requires a ForceApplier component.");
     }
 
     public override void OnUpdate(float deltaTime)
     {
-        if (Active) _forceApplier.AddForce(new GravityForce(GravityAcceleration));
+        if (Active) _forceApplier.AddForce(new GravityForce(_body, GravityAcceleration));
     }
 }
