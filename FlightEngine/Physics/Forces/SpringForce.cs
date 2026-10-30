@@ -3,21 +3,21 @@
 namespace FlightEngine.Physics.Forces;
 
 public class SpringForce(
-    RigidBody thisBody,
-    RigidBody otherBody,
-    Vector3 thisLocalAnchor,
-    Vector3 otherLocalAnchor,
+    RigidBody bodyA,
+    RigidBody bodyB,
+    Vector3 localAnchorA,
+    Vector3 localAnchorB,
     float stiffness,
     float damping,
-    float restLength) : PairForceGenerator
+    float restLength) : ForceGenerator
 {
-    public override RigidBody ThisBody => thisBody;
-    public override RigidBody OtherBody => otherBody;
-    public override Vector3 LocalApplicationPoint => thisLocalAnchor;
-    public override Vector3 OtherLocalApplicationPoint => otherLocalAnchor;
     private const float MinLength = 1e-6f;
+    public override RigidBody Body => bodyA;
+    public override Vector3 LocalApplicationPoint => localAnchorA;
+    
+    public override Vector3 CalculateWorldForce() => CalculateWorldForceOnBodyA();
 
-    public override Vector3 CalculateWorldForceOnThis()
+    private Vector3 CalculateWorldForceOnBodyA()
     {
         var displacement = CalculateAnchorsDisplacement();
         var length = displacement.Length();
@@ -33,9 +33,9 @@ public class SpringForce(
 
     private Vector3 CalculateAnchorsDisplacement()
     {
-        var thisWorldAnchor = thisBody.Transform.TransformPoint(thisLocalAnchor);
-        var otherWorldAnchor = otherBody.Transform.TransformPoint(otherLocalAnchor);
-        return otherWorldAnchor - thisWorldAnchor;
+        var worldAnchorA = bodyA.Transform.TransformPoint(localAnchorA);
+        var worldAnchorB = bodyB.Transform.TransformPoint(localAnchorB);
+        return worldAnchorB - worldAnchorA;
     }
 
     private float CalculateElasticStrength(float length)
@@ -46,9 +46,9 @@ public class SpringForce(
 
     private float CalculateDampingStrength(Vector3 springDirection)
     {
-        var otherVelocity = otherBody.GetVelocityAtPoint(otherLocalAnchor);
-        var thisVelocity = thisBody.GetVelocityAtPoint(thisLocalAnchor);
-        var relativeVelocity = otherVelocity - thisVelocity;
+        var velocityB = bodyB.GetVelocityAtPoint(localAnchorB);
+        var velocityA = bodyA.GetVelocityAtPoint(localAnchorA);
+        var relativeVelocity = velocityB - velocityA;
 
         var separationSpeed = Vector3.Dot(relativeVelocity, springDirection);
         return separationSpeed * damping;
