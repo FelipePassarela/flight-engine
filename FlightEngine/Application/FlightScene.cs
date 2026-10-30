@@ -19,29 +19,35 @@ public class FlightScene
         Grid = CreateGrid();
         Plane = CreatePlane();
         Camera = CreateCamera(Plane);
-        Scene = new Scene([Plane, Grid, Camera]);
+
+        var spring = new GameObject([
+            new Spring(
+                bodyA: Plane.GetComponent<RigidBody>()!,
+                bodyB: Grid.GetComponent<RigidBody>()!,
+                localAnchorA: Vector3.UnitY,
+                stiffness: 10.0f),
+            new SpringRenderer()
+        ]);
+
+        Scene = new Scene([Plane, Grid, Camera, spring]);
     }
 
-    private GameObject CreatePlane()
-    {
-        var gridBody = Grid.GetComponent<RigidBody>()!;
-        return new GameObject([
+    private static GameObject CreatePlane() =>
+        new([
             new RigidBody(mass: 1.0f),
             new FlightInputController(),
             new ForceApplier(),
-            new Spring(otherBody: gridBody, stiffness: 10.0f, thisLocalAnchor: Vector3.UnitY),
             new Gravity(Gravity.MoonGravityAcceleration),
             new GizmoRenderer(),
             new SphereRenderer(radius: 0.4f),
-            new SpringRenderer()
         ]);
-    }
 
     private static GameObject CreateGrid() =>
         new([
             new RigidBody(mass: 0.0f),
             new GridRenderer(),
             new GizmoRenderer(axisLength: 5.0f),
+            new ForceApplier()
         ]);
 
     private static GameObject CreateCamera(GameObject plane) =>
