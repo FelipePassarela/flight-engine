@@ -1,8 +1,7 @@
 ﻿using FlightEngine.Physics.Constraints;
-using FlightEngine.Rendering;
 using Raylib_cs;
 
-namespace FlightEngine.Application;
+namespace FlightEngine.Rendering;
 
 public class FixedJointRenderer : Renderer
 {
