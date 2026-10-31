@@ -8,14 +8,14 @@ internal class AngularMotion(MassProperties massProperties) : Motion
     private Vector3 _accumulatedTorque = Vector3.Zero;
     public Vector3 AngularVelocity { get; set; } = Vector3.Zero;
 
-    public void AddTorque(Vector3 worldForce, Vector3 localApplicationPoint, Transform bodyTransform)
+    public void ApplyTorque(Vector3 worldForce, Vector3 localApplicationPoint, Transform bodyTransform)
     {
         var localOffset = localApplicationPoint - massProperties.CenterOfMass;
         var offset = bodyTransform.TransformVector(localOffset);
         _accumulatedTorque += Vector3.Cross(offset, worldForce);
     }
 
-    public void AddImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint, Transform bodyTransform)
+    public void ApplyImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint, Transform bodyTransform)
     {
         var localOffset = localApplicationPoint - massProperties.CenterOfMass;
         var offset = bodyTransform.TransformVector(localOffset);
@@ -23,7 +23,7 @@ internal class AngularMotion(MassProperties massProperties) : Motion
         AngularVelocity += angularImpulse * massProperties.InverseMomentOfInertia;
     }
 
-    public void AddImpulse(Vector3 worldAngularImpulse)
+    public void ApplyImpulse(Vector3 worldAngularImpulse)
     {
         AngularVelocity += worldAngularImpulse * massProperties.InverseMomentOfInertia;
     }

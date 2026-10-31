@@ -95,9 +95,9 @@ public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) 
     {
         var linearImpulse = new Vector3((float)impulse[0], (float)impulse[1], (float)impulse[2]);
         var angularImpulse = new Vector3((float)impulse[3], (float)impulse[4], (float)impulse[5]);
-        bodyA.AddImpulse(-linearImpulse, _localAnchorA);
-        bodyA.AddAngularImpulse(-angularImpulse);
-        bodyB.AddImpulse(linearImpulse, _localAnchorB);
-        bodyB.AddAngularImpulse(angularImpulse);
+        bodyA.ApplyImpulse(-linearImpulse, _localAnchorA);
+        bodyA.ApplyAngularImpulse(-angularImpulse);
+        bodyB.ApplyImpulse(linearImpulse, _localAnchorB);
+        bodyB.ApplyAngularImpulse(angularImpulse);
     }
 }

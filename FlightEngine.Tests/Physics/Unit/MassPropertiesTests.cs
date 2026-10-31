@@ -61,8 +61,8 @@ public class MassPropertiesTests
     {
         var body = PhysicsObjects.Body(mass: 0, inertia: 4);
         body.InverseMomentOfInertia = 0.5f;
-        body.AddImpulse(Vector3.UnitY, Vector3.UnitX);
-        body.AddAngularImpulse(Vector3.UnitZ);
+        body.ApplyImpulse(Vector3.UnitY, Vector3.UnitX);
+        body.ApplyAngularImpulse(Vector3.UnitZ);
 
         Assert.Equal(0, body.InverseMomentOfInertia);
         Assert.Equal(2, body.MomentOfInertia);

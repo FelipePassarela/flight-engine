@@ -50,7 +50,7 @@ public class AirplaneTests
             {
                 // A short off-center pulse initiates rotation, then thrust acts at the center.
                 if (step < stepsPerSecond / 5)
-                    applier.AddForce(offCenterThrust);
+                    applier.ApplyForce(offCenterThrust);
                 else
                     airplane.ApplyThrust(fuselage.Transform.LocalForward);
             },
@@ -76,7 +76,7 @@ public class AirplaneTests
             beforeStep: step =>
             {
                 if (step < stepsPerSecond / 5)
-                    targetWing.AddForce(wingLift.CalculateWorldForce(), wingLift.LocalApplicationPoint);
+                    targetWing.ApplyForce(wingLift.CalculateWorldForce(), wingLift.LocalApplicationPoint);
             },
             afterStep: () => AssertWingsStayAttached(fuselage, wings));
 

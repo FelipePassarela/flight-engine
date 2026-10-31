@@ -32,7 +32,7 @@ public class Airplane(GameObject leftWing, GameObject rightWing) : Component
     {
         const float forceMagnitude = 10.0f;
         var force = new ThrustForce(_fuselageBody, localDirection, forceMagnitude, _fuselageBody.CenterOfMass);
-        _fuselageBody.AddForce(force.CalculateWorldForce(), force.LocalApplicationPoint);
+        _fuselageBody.ApplyForce(force.CalculateWorldForce(), force.LocalApplicationPoint);
     }
 
     public void ApplyRoll(float rollInput)
@@ -42,7 +42,7 @@ public class Airplane(GameObject leftWing, GameObject rightWing) : Component
         var worldForce = Fuselage.Transform.WorldUp * clampedInput * forcePerWing;
 
         // Equal and opposite forces create a torque without accelerating the center of mass.
-        _leftWingBody.AddForce(worldForce, _leftWingBody.CenterOfMass);
-        _rightWingBody.AddForce(-worldForce, _rightWingBody.CenterOfMass);
+        _leftWingBody.ApplyForce(worldForce, _leftWingBody.CenterOfMass);
+        _rightWingBody.ApplyForce(-worldForce, _rightWingBody.CenterOfMass);
     }
 }

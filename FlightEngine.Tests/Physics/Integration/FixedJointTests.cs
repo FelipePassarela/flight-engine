@@ -93,7 +93,7 @@ public class FixedJointTests
             movingBody.Transform.LocalLeft);
 
         simulation.RunFor(durationSeconds: 5, stepsPerSecond,
-            beforeStep: _ => applier.AddForce(thrust),
+            beforeStep: _ => applier.ApplyForce(thrust),
             afterStep: () =>
             {
                 PhysicsAssert.PoseNear(position, orientation, movingBody, positionTolerance: 1e-4f);
@@ -171,7 +171,7 @@ public class FixedJointTests
         var thrust = new ThrustForce(endBody, -endBody.Transform.LocalUp, 10, endBody.Transform.LocalLeft);
 
         simulation.RunFor(durationSeconds: 5, stepsPerSecond: 120,
-            beforeStep: _ => applier.AddForce(thrust),
+            beforeStep: _ => applier.ApplyForce(thrust),
             afterStep: () =>
             {
                 PhysicsAssert.VectorNear(Vector3.UnitX, middleBody.Transform.Position, 0.01f);
@@ -202,7 +202,7 @@ public class FixedJointTests
         var bodyB = PhysicsObjects.Body(mass: 2, inertia: 0, position: Vector3.UnitX);
         var simulation = new PhysicsSimulation(bodyA.GameObject, bodyB.GameObject,
             PhysicsObjects.Joint(bodyA, bodyB, Vector3.UnitY));
-        bodyA.AddImpulse(Vector3.UnitY * 3, Vector3.Zero);
+        bodyA.ApplyImpulse(Vector3.UnitY * 3, Vector3.Zero);
 
         simulation.RunFor(durationSeconds: 2, stepsPerSecond: 60);
 

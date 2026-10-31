@@ -8,12 +8,12 @@ internal class LinearMotion(MassProperties massProperties) : Motion
     private Vector3 _accumulatedForce = Vector3.Zero;
     public Vector3 Velocity { get; set; } = Vector3.Zero;
 
-    public void AddForce(Vector3 worldForce)
+    public void ApplyForce(Vector3 worldForce)
     {
         _accumulatedForce += worldForce;
     }
 
-    public void AddImpulse(Vector3 worldImpulse)
+    public void ApplyImpulse(Vector3 worldImpulse)
     {
         Velocity += worldImpulse * massProperties.InverseMass;
     }

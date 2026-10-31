@@ -18,13 +18,13 @@ public class ForceApplier : Component
         foreach (var generator in _forces)
         {
             var force = generator.CalculateWorldForce();
-            _body.AddForce(force, generator.LocalApplicationPoint);
+            _body.ApplyForce(force, generator.LocalApplicationPoint);
         }
 
         _forces.Clear();
     }
 
-    public void AddForce(ForceGenerator force)
+    public void ApplyForce(ForceGenerator force)
     {
         _forces.Add(force);
     }

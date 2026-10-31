@@ -52,7 +52,7 @@ public class Spring(
             Stiffness,
             Damping,
             RestLength);
-        _forceApplierA.AddForce(springForceOnA);
-        _forceApplierB.AddForce(springForceOnB);
+        _forceApplierA.ApplyForce(springForceOnA);
+        _forceApplierB.ApplyForce(springForceOnB);
     }
 }

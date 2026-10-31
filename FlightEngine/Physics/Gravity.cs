@@ -24,6 +24,6 @@ public class Gravity(Vector3 gravityAcceleration = default, bool active = true) 
 
     public override void OnUpdate(float deltaTime)
     {
-        if (Active) _forceApplier.AddForce(new GravityForce(_body, GravityAcceleration));
+        if (Active) _forceApplier.ApplyForce(new GravityForce(_body, GravityAcceleration));
     }
 }

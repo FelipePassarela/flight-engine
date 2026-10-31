@@ -94,21 +94,21 @@ public class RigidBody : Component
         _angularMotion.StopMotion();
     }
 
-    public void AddForce(Vector3 worldForce, Vector3 localApplicationPoint)
+    public void ApplyForce(Vector3 worldForce, Vector3 localApplicationPoint)
     {
-        _linearMotion.AddForce(worldForce);
-        _angularMotion.AddTorque(worldForce, localApplicationPoint, Transform);
+        _linearMotion.ApplyForce(worldForce);
+        _angularMotion.ApplyTorque(worldForce, localApplicationPoint, Transform);
     }
 
-    public void AddImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
+    public void ApplyImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
     {
-        _linearMotion.AddImpulse(worldImpulse);
-        _angularMotion.AddImpulse(worldImpulse, localApplicationPoint, Transform);
+        _linearMotion.ApplyImpulse(worldImpulse);
+        _angularMotion.ApplyImpulse(worldImpulse, localApplicationPoint, Transform);
     }
 
-    public void AddAngularImpulse(Vector3 worldAngularImpulse)
+    public void ApplyAngularImpulse(Vector3 worldAngularImpulse)
     {
-        _angularMotion.AddImpulse(worldAngularImpulse);
+        _angularMotion.ApplyImpulse(worldAngularImpulse);
     }
 
     public Vector3 GetVelocityAtPoint(Vector3 localPoint)

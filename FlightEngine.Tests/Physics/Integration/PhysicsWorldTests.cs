@@ -14,8 +14,8 @@ public class PhysicsWorldTests
         var body = PhysicsObjects.Body(mass: 2, inertia: 4);
         var simulation = new PhysicsSimulation(body.GameObject);
         var applier = body.GameObject.GetComponent<ForceApplier>()!;
-        applier.AddForce(new ThrustForce(body, Vector3.UnitZ, 8, Vector3.UnitY));
-        applier.AddForce(new GravityForce(body, new Vector3(0, -4, 0)));
+        applier.ApplyForce(new ThrustForce(body, Vector3.UnitZ, 8, Vector3.UnitY));
+        applier.ApplyForce(new GravityForce(body, new Vector3(0, -4, 0)));
 
         simulation.Step(0.25f);
 
@@ -70,8 +70,8 @@ public class PhysicsWorldTests
 
         simulation.RunFor(durationSeconds: 2, stepsPerSecond: 60, beforeStep: _ =>
         {
-            body.AddImpulse(Vector3.UnitY * 10, body.Transform.LocalLeft);
-            body.AddForce(Vector3.UnitZ * 10, body.Transform.LocalUp);
+            body.ApplyImpulse(Vector3.UnitY * 10, body.Transform.LocalLeft);
+            body.ApplyForce(Vector3.UnitZ * 10, body.Transform.LocalUp);
         });
 
         PhysicsAssert.PoseNear(position, orientation, body);
