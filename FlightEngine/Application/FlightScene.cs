@@ -9,7 +9,7 @@ namespace FlightEngine.Application;
 
 public class FlightScene
 {
-    public GameObject Plane { get; }
+    public Airplane Airplane { get; }
     public GameObject Camera { get; }
     public GameObject Grid { get; }
     public Scene Scene { get; }
@@ -17,30 +17,10 @@ public class FlightScene
     public FlightScene()
     {
         Grid = CreateGrid();
-        Plane = CreatePlane();
-        Camera = CreateCamera(Plane);
-
-        var spring = new GameObject([
-            new Spring(
-                bodyA: Plane.GetComponent<RigidBody>()!,
-                bodyB: Grid.GetComponent<RigidBody>()!,
-                localAnchorA: Vector3.UnitY,
-                stiffness: 10.0f),
-            new SpringRenderer()
-        ]);
-
-        Scene = new Scene([Plane, Grid, Camera, spring]);
+        Airplane = new Airplane(new Vector3(0.0f, 3.0f, 0.0f));
+        Camera = CreateCamera(Airplane.Fuselage);
+        Scene = new Scene([.. Airplane.GameObjects, Grid, Camera]);
     }
-
-    private static GameObject CreatePlane() =>
-        new([
-            new RigidBody(mass: 1.0f),
-            new FlightInputController(),
-            new ForceApplier(),
-            new Gravity(Gravity.MoonGravityAcceleration),
-            new GizmoRenderer(),
-            new SphereRenderer(radius: 0.4f),
-        ]);
 
     private static GameObject CreateGrid() =>
         new([
@@ -50,6 +30,10 @@ public class FlightScene
             new ForceApplier()
         ]);
 
-    private static GameObject CreateCamera(GameObject plane) =>
-        new([new Camera(plane.Transform), new Follow(plane.Transform)]);
+    private static GameObject CreateCamera(GameObject airplane) =>
+        new([
+            new Transform { Position = airplane.Transform.TransformPoint(new Vector3(0.0f, 5.0f, -9.0f)) },
+            new Camera(airplane.Transform),
+            new Follow(airplane.Transform)
+        ]);
 }

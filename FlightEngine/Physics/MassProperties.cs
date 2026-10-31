@@ -40,6 +40,20 @@ internal class MassProperties
     // Zero represents infinite mass.
     public bool HasInfiniteMass => Mass == 0.0f;
 
+    public float InverseMomentOfInertia
+    {
+        // Static bodies have no angular response, regardless of their stored inertia.
+        get => !HasInfiniteMass && MomentOfInertia > 0.0f ? 1.0f / MomentOfInertia : 0.0f;
+        set
+        {
+            ArgumentOutOfRangeException.ThrowIfNegative(value);
+            if (!float.IsFinite(value))
+                throw new ArgumentOutOfRangeException(nameof(value), "Inverse moment of inertia must be finite.");
+
+            MomentOfInertia = value > 0.0f ? 1.0f / value : 0.0f;
+        }
+    }
+
     public float MomentOfInertia // TODO: Change moment of inertia to tensor of inertia for complex shape
     {
         get;

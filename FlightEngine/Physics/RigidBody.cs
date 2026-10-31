@@ -30,10 +30,10 @@ public class RigidBody : Component
         set => _linearMotion.Velocity = value;
     }
 
-    public float MomentOfInertia
+    public float Mass
     {
-        get => _massProperties.MomentOfInertia;
-        set => _massProperties.MomentOfInertia = value;
+        get => _massProperties.Mass;
+        set => _massProperties.Mass = value;
     }
 
     public float InverseMass
@@ -42,10 +42,16 @@ public class RigidBody : Component
         set => _massProperties.InverseMass = value;
     }
 
-    public float Mass
+    public float MomentOfInertia
     {
-        get => _massProperties.Mass;
-        set => _massProperties.Mass = value;
+        get => _massProperties.MomentOfInertia;
+        set => _massProperties.MomentOfInertia = value;
+    }
+
+    public float InverseMomentOfInertia
+    {
+        get => _massProperties.InverseMomentOfInertia;
+        set => _massProperties.InverseMomentOfInertia = value;
     }
 
     public bool HasInfiniteMass => _massProperties.HasInfiniteMass;
@@ -91,12 +97,23 @@ public class RigidBody : Component
     public void AddForce(Vector3 worldForce, Vector3 localApplicationPoint)
     {
         _linearMotion.AddForce(worldForce);
-        _angularMotion.AddTorque(worldForce, localApplicationPoint, Transform.Orientation);
+        _angularMotion.AddTorque(worldForce, localApplicationPoint, Transform);
     }
-    
+
+    public void AddImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
+    {
+        _linearMotion.AddImpulse(worldImpulse);
+        _angularMotion.AddImpulse(worldImpulse, localApplicationPoint, Transform);
+    }
+
+    public void AddAngularImpulse(Vector3 worldAngularImpulse)
+    {
+        _angularMotion.AddImpulse(worldAngularImpulse);
+    }
+
     public Vector3 GetVelocityAtPoint(Vector3 localPoint)
     {
-        var displacement = Transform.TransformDirection(localPoint - CenterOfMass);
+        var displacement = Transform.TransformVector(localPoint - CenterOfMass);
         var angularVelocityAtPoint = Vector3.Cross(AngularVelocity, displacement);
         return Velocity + angularVelocityAtPoint;
     }

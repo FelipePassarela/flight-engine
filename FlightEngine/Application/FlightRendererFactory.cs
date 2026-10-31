@@ -16,15 +16,15 @@ public static class FlightRendererFactory
 
     private static DebugPanel CreateDebugPanel(FlightScene flightScene)
     {
-        var plane = flightScene.Plane;
-        var planeBody = plane.GetComponent<RigidBody>()!;
+        var airplane = flightScene.Airplane.Fuselage;
+        var planeBody = airplane.GetComponent<RigidBody>()!;
         var camera = flightScene.Camera.GetComponent<Camera>()!;
 
         List<DebugSection> debugSections =
         [
             new PerformanceDebugSection(),
-            new PositionDebugSection(plane.Transform),
-            new OrientationDebugSection(plane.Transform),
+            new PositionDebugSection(airplane.Transform),
+            new OrientationDebugSection(airplane.Transform),
             new RigidBodyDebugSection(planeBody),
             new CameraDebugSection(camera)
         ];

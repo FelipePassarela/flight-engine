@@ -1,8 +1,13 @@
-﻿using FlightEngine.Physics.Forces;
+﻿using FlightEngine.Physics.Constraints;
+using FlightEngine.Physics.Forces;
 
 namespace FlightEngine.Physics;
 
-public class PhysicsWorld(IEnumerable<RigidBody> bodies, IEnumerable<ForceApplier> forceAppliers)
+public class PhysicsWorld(
+    IEnumerable<RigidBody> bodies,
+    IEnumerable<ForceApplier> forceAppliers,
+    IEnumerable<Constraint> constraints,
+    int constraintSolverIterations = 10)
 {
     public void Step(float deltaTime)
     {
@@ -12,7 +17,7 @@ public class PhysicsWorld(IEnumerable<RigidBody> bodies, IEnumerable<ForceApplie
         foreach (var body in bodies)
             body.IntegrateVelocities(deltaTime);
 
-        HandleConstraints();
+        HandleConstraints(deltaTime);
 
         foreach (var body in bodies)
         {
@@ -21,8 +26,13 @@ public class PhysicsWorld(IEnumerable<RigidBody> bodies, IEnumerable<ForceApplie
         }
     }
 
-    private void HandleConstraints()
+    private void HandleConstraints(float deltaTime)
     {
-        // not implemented yet
+        foreach (var constraint in constraints)
+            constraint.Prepare(deltaTime);
+
+        for (var i = 0; i < constraintSolverIterations; i++)
+            foreach (var constraint in constraints)
+                constraint.SolveVelocity(deltaTime);
     }
 }
