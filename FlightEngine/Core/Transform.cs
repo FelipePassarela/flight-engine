@@ -52,4 +52,9 @@ public class Transform : Component
 
     public Vector3 InverseTransformDirection(Vector3 direction) =>
         Vector3.Transform(direction, Quaternion.Inverse(Orientation));
+
+    public Vector3 TransformVector(Vector3 vector) => Vector3.Transform(vector * Scale, Orientation);
+
+    public Vector3 InverseTransformVector(Vector3 vector) =>
+        Vector3.Transform(vector, Quaternion.Inverse(Orientation)) / Scale;
 }

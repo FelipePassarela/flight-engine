@@ -8,17 +8,17 @@ internal class AngularMotion(MassProperties massProperties) : Motion
     private Vector3 _accumulatedTorque = Vector3.Zero;
     public Vector3 AngularVelocity { get; set; } = Vector3.Zero;
 
-    public void AddTorque(Vector3 worldForce, Vector3 localApplicationPoint, Quaternion bodyOrientation)
+    public void AddTorque(Vector3 worldForce, Vector3 localApplicationPoint, Transform bodyTransform)
     {
         var localOffset = localApplicationPoint - massProperties.CenterOfMass;
-        var offset = Vector3.Transform(localOffset, bodyOrientation);
+        var offset = bodyTransform.TransformVector(localOffset);
         _accumulatedTorque += Vector3.Cross(offset, worldForce);
     }
 
-    public void AddImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint, Quaternion bodyOrientation)
+    public void AddImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint, Transform bodyTransform)
     {
         var localOffset = localApplicationPoint - massProperties.CenterOfMass;
-        var offset = Vector3.Transform(localOffset, bodyOrientation);
+        var offset = bodyTransform.TransformVector(localOffset);
         var angularImpulse = Vector3.Cross(offset, worldImpulse);
         AngularVelocity += angularImpulse * massProperties.InverseMomentOfInertia;
     }

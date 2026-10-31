@@ -12,7 +12,7 @@ public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) 
     private Quaternion _relativeOrientation;
     private bool _prepared;
     private readonly BodyPairConstraintSystem _system = new(Dimension);
-    
+
     public Vector3 ContactPoint => bodyA.Transform.TransformPoint(_localAnchorA);
     public RigidBody BodyA => bodyA;
     public RigidBody BodyB => bodyB;
@@ -38,8 +38,8 @@ public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) 
         var transformA = bodyA.Transform;
         var transformB = bodyB.Transform;
 
-        var rA = transformA.TransformDirection(_localAnchorA - bodyA.CenterOfMass);
-        var rB = transformB.TransformDirection(_localAnchorB - bodyB.CenterOfMass);
+        var rA = transformA.TransformVector(_localAnchorA - bodyA.CenterOfMass);
+        var rB = transformB.TransformVector(_localAnchorB - bodyB.CenterOfMass);
         var anchorA = transformA.TransformPoint(_localAnchorA);
         var anchorB = transformB.TransformPoint(_localAnchorB);
 

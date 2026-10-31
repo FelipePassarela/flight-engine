@@ -36,6 +36,41 @@ public class FixedJointTests
     }
 
     [Theory]
+    [InlineData(1f)]
+    [InlineData(2f)]
+    [InlineData(0.5f)]
+    public void SolvingJointPreservesRigidRotationForScaledBodies(float scale)
+    {
+        var bodyA = PhysicsObjects.Body(position: -Vector3.UnitX);
+        var bodyB = PhysicsObjects.Body(position: Vector3.UnitX);
+        bodyA.Transform.Scale = bodyB.Transform.Scale = new Vector3(scale);
+        var anchor = Vector3.Zero;
+        var localAnchorA = bodyA.Transform.InverseTransformPoint(anchor);
+        var localAnchorB = bodyB.Transform.InverseTransformPoint(anchor);
+        var joint = new FixedJoint(bodyA, bodyB, anchor);
+        joint.OnInitialize();
+        bodyA.Velocity = -Vector3.UnitY;
+        bodyB.Velocity = Vector3.UnitY;
+        bodyA.AngularVelocity = bodyB.AngularVelocity = Vector3.UnitZ;
+        var angularMomentum = PhysicsMeasurements.CalculateAngularMomentum(bodyA, bodyB);
+
+        joint.Prepare(1f / 60);
+        joint.SolveVelocity(1f / 60);
+
+        var offsetA = bodyA.Transform.TransformPoint(localAnchorA) - bodyA.Transform.TransformPoint(bodyA.CenterOfMass);
+        var offsetB = bodyB.Transform.TransformPoint(localAnchorB) - bodyB.Transform.TransformPoint(bodyB.CenterOfMass);
+        var anchorVelocityA = bodyA.Velocity + Vector3.Cross(bodyA.AngularVelocity, offsetA);
+        var anchorVelocityB = bodyB.Velocity + Vector3.Cross(bodyB.AngularVelocity, offsetB);
+        PhysicsAssert.VectorNear(Vector3.Zero, anchorVelocityA);
+        PhysicsAssert.VectorNear(Vector3.Zero, anchorVelocityB);
+        PhysicsAssert.VectorNear(-Vector3.UnitY, bodyA.Velocity);
+        PhysicsAssert.VectorNear(Vector3.UnitY, bodyB.Velocity);
+        PhysicsAssert.VectorNear(Vector3.UnitZ, bodyA.AngularVelocity);
+        PhysicsAssert.VectorNear(Vector3.UnitZ, bodyB.AngularVelocity);
+        PhysicsAssert.VectorNear(angularMomentum, PhysicsMeasurements.CalculateAngularMomentum(bodyA, bodyB));
+    }
+
+    [Theory]
     [InlineData(true, 60)]
     [InlineData(false, 60)]
     [InlineData(true, 120)]

@@ -29,6 +29,48 @@ public class RigidBodyTests
         PhysicsAssert.VectorNear(Vector3.UnitX * 2, body.AngularVelocity);
     }
 
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 2f, 2f)]
+    [InlineData(0.5f, 0.5f, 0.5f)]
+    [InlineData(2f, 3f, 4f)]
+    public void OffCenterImpulseUsesScaleAndRotationWithoutTranslation(float scaleX, float scaleY, float scaleZ)
+    {
+        var body = PhysicsObjects.Body(mass: 2, inertia: 4, position: new Vector3(5, -2, 3),
+            orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
+        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+        var initialAngularVelocity = new Vector3(1, -2, 3);
+        body.AngularVelocity = initialAngularVelocity;
+
+        body.AddImpulse(new Vector3(4, -6, 8), new Vector3(1, 2, 3));
+
+        var expectedAngularChange = new Vector3(
+            2 * scaleX + 4.5f * scaleZ, 4 * scaleY + 3 * scaleZ, 3 * scaleY - scaleX);
+        PhysicsAssert.VectorNear(new Vector3(2, -3, 4), body.Velocity);
+        PhysicsAssert.VectorNear(initialAngularVelocity + expectedAngularChange, body.AngularVelocity);
+    }
+
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 2f, 2f)]
+    [InlineData(0.5f, 0.5f, 0.5f)]
+    [InlineData(2f, 3f, 4f)]
+    public void OffCenterForceUsesScaleAndRotationWithoutTranslation(float scaleX, float scaleY, float scaleZ)
+    {
+        var body = PhysicsObjects.Body(mass: 2, inertia: 4, position: new Vector3(5, -2, 3),
+            orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
+        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+
+        body.AddForce(new Vector3(4, -6, 8), new Vector3(1, 2, 3));
+        PhysicsAssert.AtRest(body);
+        body.IntegrateVelocities(0.5f);
+
+        var expectedAngularVelocity = new Vector3(
+            scaleX + 2.25f * scaleZ, 2 * scaleY + 1.5f * scaleZ, 1.5f * scaleY - 0.5f * scaleX);
+        PhysicsAssert.VectorNear(new Vector3(1, -1.5f, 2), body.Velocity);
+        PhysicsAssert.VectorNear(expectedAngularVelocity, body.AngularVelocity);
+    }
+
     [Fact]
     public void AngularImpulseDoesNotChangeLinearVelocity()
     {
@@ -67,6 +109,27 @@ public class RigidBodyTests
         body.AngularVelocity = Vector3.UnitZ * 3;
 
         PhysicsAssert.VectorNear(new Vector3(-1, 0, 0), body.GetVelocityAtPoint(Vector3.UnitX));
+    }
+
+    [Theory]
+    [InlineData(1f, 1f, 1f)]
+    [InlineData(2f, 2f, 2f)]
+    [InlineData(0.5f, 0.5f, 0.5f)]
+    [InlineData(2f, 3f, 4f)]
+    public void VelocityAtPointUsesScaleAndRotationWithoutTranslation(float scaleX, float scaleY, float scaleZ)
+    {
+        var body = PhysicsObjects.Body(position: new Vector3(5, -2, 3),
+            orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
+        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+        body.Velocity = new Vector3(2, -1, 4);
+        body.AngularVelocity = new Vector3(1, 2, 3);
+
+        var pointVelocity = body.GetVelocityAtPoint(new Vector3(1, 2, 3));
+
+        var expectedVelocity = new Vector3(
+            2 + 6 * scaleZ - 3 * scaleX, -1 - 6 * scaleY - 3 * scaleZ, 4 + scaleX + 4 * scaleY);
+        PhysicsAssert.VectorNear(expectedVelocity, pointVelocity);
+        PhysicsAssert.VectorNear(body.Velocity, body.GetVelocityAtPoint(Vector3.Zero));
     }
 
     [Fact]
