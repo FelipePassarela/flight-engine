@@ -1,7 +1,5 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
-using FlightEngine.Physics;
-using FlightEngine.Physics.Forces;
 using ImGuiNET;
 using Raylib_cs;
 
@@ -9,12 +7,12 @@ namespace FlightEngine.Application;
 
 public class FlightInputController : Component
 {
-    private RigidBody _body = null!;
+    private Airplane _airplane = null!;
 
     public override void OnInitialize()
     {
-        _body = GameObject.GetComponent<RigidBody>() ??
-                throw new InvalidOperationException("FlightInputController requires a RigidBody component.");
+        _airplane = GameObject.GetComponent<Airplane>() ??
+                    throw new InvalidOperationException("FlightInputController requires an Airplane component.");
     }
 
     public override void OnUpdate(float deltaTime)
@@ -27,7 +25,7 @@ public class FlightInputController : Component
 
     private void HandleTranslationInput()
     {
-        var transform = _body.Transform;
+        var transform = _airplane.Fuselage.Transform;
 
         var forceDirection = Vector3.Zero;
         if (Raylib.IsKeyDown(KeyboardKey.W)) forceDirection += transform.LocalForward;
@@ -36,30 +34,18 @@ public class FlightInputController : Component
         if (Raylib.IsKeyDown(KeyboardKey.D)) forceDirection += transform.LocalRight;
         if (Raylib.IsKeyDown(KeyboardKey.Space)) forceDirection += transform.LocalUp;
 
-        const float forceMagnitude = 10.0f;
-        var force = new ThrustForce(_body, forceDirection, forceMagnitude);
-        _body.AddForce(force.CalculateWorldForce(), force.LocalApplicationPoint);
+        _airplane.ApplyThrust(forceDirection);
     }
 
     private void HandleRotationInput()
     {
-        var localApplicationPoint = Vector3.Zero;
-        var forceMagnitude = 0.0f;
-        var transform = _body.Transform;
+        var rollInput = 0f;
 
         if (Raylib.IsKeyDown(KeyboardKey.Q))
-        {
-            localApplicationPoint += -transform.LocalRight * 2.0f;
-            forceMagnitude = 5.0f;
-        }
-
+            rollInput += 1f;
         if (Raylib.IsKeyDown(KeyboardKey.E))
-        {
-            localApplicationPoint += transform.LocalRight * 2.0f;
-            forceMagnitude = 5.0f;
-        }
+            rollInput -= 1f;
 
-        var rotationForce = new ThrustForce(_body, -transform.LocalForward, forceMagnitude, localApplicationPoint);
-        _body.AddForce(rotationForce.CalculateWorldForce(), rotationForce.LocalApplicationPoint);
+        _airplane.ApplyRoll(rollInput);
     }
 }

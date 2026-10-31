@@ -27,14 +27,39 @@ internal static class PhysicsAssert
 
     public static void OrientationNear(Quaternion expected, Quaternion actual, float toleranceRadians = 1e-3f)
     {
-        // q and -q describe the same orientation.
-        var dot = Quaternion.Dot(Quaternion.Normalize(expected), Quaternion.Normalize(actual));
-        dot = MathF.Abs(dot);
-        var angle = 2 * MathF.Acos(Math.Clamp(dot, 0, 1));
-        
+        var angle = AngleBetweenOrientations(expected, actual);
+
         Assert.True(
             float.IsFinite(angle) && angle <= toleranceRadians,
             $"Orientation error {angle} radians exceeds {toleranceRadians}.");
         Assert.InRange(MathF.Abs(actual.Length() - 1), 0, 1e-5f);
+    }
+
+    public static void RotatedByAtLeast(
+        Quaternion initialOrientation, Quaternion actualOrientation, float minimumAngleDegrees)
+    {
+        var angleRadians = AngleBetweenOrientations(initialOrientation, actualOrientation);
+        var angleDegrees = angleRadians * (180f / MathF.PI);
+
+        Assert.True(
+            float.IsFinite(angleDegrees) && angleDegrees >= minimumAngleDegrees,
+            $"Expected rotation of at least {minimumAngleDegrees} degrees, actual rotation {angleDegrees} degrees.");
+        Assert.InRange(MathF.Abs(actualOrientation.Length() - 1), 0, 1e-5f);
+    }
+
+    public static void RotatingAroundAxis(RigidBody body, Vector3 axis, float minimumAngularSpeed)
+    {
+        var angularSpeed = Vector3.Dot(body.AngularVelocity, Vector3.Normalize(axis));
+
+        Assert.True(
+            float.IsFinite(angularSpeed) && angularSpeed > minimumAngularSpeed,
+            $"Expected angular speed above {minimumAngularSpeed} rad/s around {axis}, actual speed {angularSpeed} rad/s.");
+    }
+
+    private static float AngleBetweenOrientations(Quaternion first, Quaternion second)
+    {
+        // q and -q describe the same orientation.
+        var alignment = MathF.Abs(Quaternion.Dot(Quaternion.Normalize(first), Quaternion.Normalize(second)));
+        return 2 * MathF.Acos(Math.Clamp(alignment, 0, 1));
     }
 }
