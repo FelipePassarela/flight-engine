@@ -14,8 +14,8 @@ public class DragForce(
 
     public override Vector3 CalculateWorldForce()
     {
-        var speed = body.Velocity.Length();
         var relativeVelocity = body.Velocity - windVelocity;
+        var speed = relativeVelocity.Length();
         return -0.5f * airDensity * dragCoefficient * referenceArea * speed * relativeVelocity;
     }
 }
