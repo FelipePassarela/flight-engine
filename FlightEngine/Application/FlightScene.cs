@@ -20,16 +20,22 @@ public class FlightScene
         Plane = CreatePlane();
         Camera = CreateCamera(Plane);
 
-        var spring = new GameObject([
-            new Spring(
+        var leftWingPosition = Plane.Transform.TransformPoint(Plane.Transform.LocalLeft * 3.0f);
+        var leftWing = new GameObject([
+            new Transform { Position = leftWingPosition },
+            new RigidBody(mass: 1.0f),
+            new SphereRenderer(radius: 0.2f),
+            new GizmoRenderer()
+        ]);
+        var leftJoint = new GameObject([
+            new FixedJoint(
                 bodyA: Plane.GetComponent<RigidBody>()!,
-                bodyB: Grid.GetComponent<RigidBody>()!,
-                localAnchorA: Vector3.UnitY,
-                stiffness: 10.0f),
-            new SpringRenderer()
+                bodyB: leftWing.GetComponent<RigidBody>()!,
+                contactPoint: Plane.Transform.WorldLeft),
+            new FixedJointRenderer()
         ]);
 
-        Scene = new Scene([Plane, Grid, Camera, spring]);
+        Scene = new Scene([Plane, Grid, Camera, leftJoint, leftWing]);
     }
 
     private static GameObject CreatePlane() =>

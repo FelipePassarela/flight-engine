@@ -11,10 +11,12 @@ public class Transform : Component
     public readonly Vector3 LocalForward = Vector3.UnitZ;
     public readonly Vector3 LocalUp = Vector3.UnitY;
     public readonly Vector3 LocalRight = -Vector3.UnitX;
+    public readonly Vector3 LocalLeft = Vector3.UnitX;
 
-    public Vector3 WorldForward => Vector3.Transform(LocalForward, Orientation);
-    public Vector3 WorldUp => Vector3.Transform(LocalUp, Orientation);
-    public Vector3 WorldRight => Vector3.Transform(LocalRight, Orientation);
+    public Vector3 WorldForward => TransformDirection(LocalForward);
+    public Vector3 WorldUp => TransformDirection(LocalUp);
+    public Vector3 WorldRight => TransformDirection(LocalRight);
+    public Vector3 WorldLeft => -WorldRight;
 
     public void LookAt(Vector3 targetPosition, Vector3 up)
     {
@@ -39,5 +41,15 @@ public class Transform : Component
         return Position + rotatedPoint;
     }
 
+    public Vector3 InverseTransformPoint(Vector3 point)
+    {
+        var translatedPoint = point - Position;
+        var rotatedPoint = Vector3.Transform(translatedPoint, Quaternion.Inverse(Orientation));
+        return rotatedPoint / Scale;
+    }
+
     public Vector3 TransformDirection(Vector3 direction) => Vector3.Transform(direction, Orientation);
+
+    public Vector3 InverseTransformDirection(Vector3 direction) =>
+        Vector3.Transform(direction, Quaternion.Inverse(Orientation));
 }

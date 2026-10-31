@@ -13,6 +13,11 @@ internal class LinearMotion(MassProperties massProperties) : Motion
         _accumulatedForce += worldForce;
     }
 
+    public void AddImpulse(Vector3 worldImpulse)
+    {
+        Velocity += worldImpulse * massProperties.InverseMass;
+    }
+
     public override void IntegrateVelocity(float deltaTime)
     {
         var acceleration = _accumulatedForce * massProperties.InverseMass;

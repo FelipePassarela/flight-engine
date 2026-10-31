@@ -8,8 +8,10 @@ namespace FlightEngine;
 
 public class EngineRunner(Scene scene, RaylibSceneRenderer sceneRenderer)
 {
-    private readonly PhysicsWorld _physicsWorld =
-        new(scene.GetComponents<RigidBody>(), scene.GetComponents<ForceApplier>());
+    private readonly PhysicsWorld _physicsWorld = new(
+        scene.GetComponents<RigidBody>(),
+        scene.GetComponents<ForceApplier>(),
+        scene.GetComponents<Constraint>());
 
     public void Run()
     {
