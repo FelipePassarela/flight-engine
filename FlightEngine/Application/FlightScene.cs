@@ -16,10 +16,11 @@ public class FlightScene
 
     public FlightScene()
     {
+        var (airplane, airplaneGameObjects) = AirplaneFactory.Create(new Vector3(0.0f, 3.0f, 0.0f));
+        Airplane = airplane;
         Grid = CreateGrid();
-        Airplane = new Airplane(new Vector3(0.0f, 3.0f, 0.0f));
         Camera = CreateCamera(Airplane.Fuselage);
-        Scene = new Scene([.. Airplane.GameObjects, Grid, Camera]);
+        Scene = new Scene([.. airplaneGameObjects, Grid, Camera]);
     }
 
     private static GameObject CreateGrid() =>
