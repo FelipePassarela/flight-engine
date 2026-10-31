@@ -1,6 +1,6 @@
 ﻿using FlightEngine.Core;
 
-namespace FlightEngine.Physics;
+namespace FlightEngine.Physics.Constraints;
 
 public abstract class Constraint : Component
 {

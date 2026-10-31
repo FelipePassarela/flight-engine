@@ -1,6 +1,7 @@
 using System.Numerics;
 using FlightEngine.Core;
 using FlightEngine.Physics;
+using FlightEngine.Physics.Constraints;
 using FlightEngine.Physics.Forces;
 using FlightEngine.Rendering.Primitives;
 using Color = Raylib_cs.Color;

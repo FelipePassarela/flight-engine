@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace FlightEngine.Physics;
+namespace FlightEngine.Physics.Constraints;
 
 // Solves coupled constraint rows for two bodies. The linear Jacobian acts on vB - vA.
 internal sealed class BodyPairConstraintSystem(int dimension)

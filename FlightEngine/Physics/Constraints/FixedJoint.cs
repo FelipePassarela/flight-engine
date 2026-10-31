@@ -1,6 +1,6 @@
 ﻿using System.Numerics;
 
-namespace FlightEngine.Physics;
+namespace FlightEngine.Physics.Constraints;
 
 public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) : Constraint
 {

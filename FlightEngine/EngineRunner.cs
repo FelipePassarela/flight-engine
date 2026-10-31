@@ -1,5 +1,6 @@
 ﻿using FlightEngine.Core;
 using FlightEngine.Physics;
+using FlightEngine.Physics.Constraints;
 using FlightEngine.Physics.Forces;
 using FlightEngine.Rendering;
 using Raylib_cs;
