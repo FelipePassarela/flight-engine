@@ -47,19 +47,29 @@ internal static class PhysicsAssert
         Assert.InRange(MathF.Abs(actualOrientation.Length() - 1), 0, 1e-5f);
     }
 
-    public static void RotatingAroundAxis(RigidBody body, Vector3 axis, float minimumAngularSpeed)
+    public static void RotatingAroundAxis(
+        RigidBody body, Vector3 axis, float minimumAxialSpeed, float maximumOffAxisSpeed)
     {
-        var angularSpeed = Vector3.Dot(body.AngularVelocity, Vector3.Normalize(axis));
+        var unitAxis = Vector3.Normalize(axis);
+        var angularVelocity = body.AngularVelocity;
+        var axialSpeed = Vector3.Dot(angularVelocity, unitAxis);
+        var offAxisSpeed = (angularVelocity - axialSpeed * unitAxis).Length();
 
         Assert.True(
-            float.IsFinite(angularSpeed) && angularSpeed > minimumAngularSpeed,
-            $"Expected angular speed above {minimumAngularSpeed} rad/s around {axis}, actual speed {angularSpeed} rad/s.");
+            float.IsFinite(axialSpeed) && axialSpeed > minimumAxialSpeed,
+            $"Expected angular speed above {minimumAxialSpeed} rad/s along {axis}, actual speed {axialSpeed} rad/s.");
+        Assert.True(
+            float.IsFinite(offAxisSpeed) && offAxisSpeed <= maximumOffAxisSpeed,
+            $"Expected angular speed at most {maximumOffAxisSpeed} rad/s perpendicular to {axis}, "
+            + $"actual speed {offAxisSpeed} rad/s.");
     }
 
     private static float AngleBetweenOrientations(Quaternion first, Quaternion second)
     {
-        // q and -q describe the same orientation.
-        var alignment = MathF.Abs(Quaternion.Dot(Quaternion.Normalize(first), Quaternion.Normalize(second)));
-        return 2 * MathF.Acos(Math.Clamp(alignment, 0, 1));
+        var inverseFirst = Quaternion.Conjugate(Quaternion.Normalize(first));
+        var relativeRotation = inverseFirst * Quaternion.Normalize(second);
+        var vectorPart = new Vector3(relativeRotation.X, relativeRotation.Y, relativeRotation.Z);
+        // The absolute scalar part selects the shortest angle for either quaternion sign.
+        return 2 * MathF.Atan2(vectorPart.Length(), MathF.Abs(relativeRotation.W));
     }
 }

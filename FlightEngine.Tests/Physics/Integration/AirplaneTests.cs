@@ -57,6 +57,26 @@ public class AirplaneTests
             afterStep: () => AssertWingsStayAttached(fuselage, wings));
     }
 
+    [Fact]
+    public void CenteredThrustAcceleratesTheAirplaneInTheRequestedDirection()
+    {
+        var (airplane, simulation, bodies) = CreateAirplaneSimulation(Vector3.Zero);
+        foreach (var body in bodies)
+            body.GameObject.GetComponent<Gravity>()!.Active = false;
+
+        var thrustDirection = Vector3.UnitZ;
+        const float thrustNewtons = 10f;
+        const int durationSeconds = 1;
+
+        simulation.RunFor(durationSeconds, stepsPerSecond: 60,
+            beforeStep: _ => airplane.ApplyThrust(thrustDirection));
+
+        var totalMass = bodies.Sum(body => body.Mass);
+        var expectedVelocity = thrustDirection * (thrustNewtons * durationSeconds / totalMass);
+        var centerOfMassVelocity = PhysicsMeasurements.CalculateLinearMomentum(bodies) / totalMass;
+        PhysicsAssert.VectorNear(expectedVelocity, centerOfMassVelocity, 1e-3f);
+    }
+
     [Theory]
     [InlineData(true, 30)]
     [InlineData(true, 60)]
@@ -81,7 +101,8 @@ public class AirplaneTests
             afterStep: () => AssertWingsStayAttached(fuselage, wings));
 
         var expectedRollAxis = useLeftWing ? Vector3.UnitZ : -Vector3.UnitZ;
-        PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis, minimumAngularSpeed: 0.25f);
+        PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis,
+            minimumAxialSpeed: 0.25f, maximumOffAxisSpeed: 1e-3f);
         PhysicsAssert.RotatedByAtLeast(Quaternion.Identity, fuselage.Transform.Orientation, minimumAngleDegrees: 17f);
         foreach (var (wing, _) in wings)
             PhysicsAssert.VectorNear(fuselage.AngularVelocity, wing.AngularVelocity, 1e-3f);
@@ -138,7 +159,8 @@ public class AirplaneTests
         else
         {
             var expectedRollAxis = rollAxis * rollInput;
-            PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis, minimumAngularSpeed: 1f);
+            PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis,
+                minimumAxialSpeed: 1f, maximumOffAxisSpeed: 1e-3f);
             PhysicsAssert.RotatedByAtLeast(
                 initialOrientation, fuselage.Transform.Orientation, minimumAngleDegrees: 17f);
         }
