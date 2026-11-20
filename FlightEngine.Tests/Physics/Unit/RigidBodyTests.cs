@@ -36,18 +36,24 @@ public class RigidBodyTests
     [InlineData(2f, 3f, 4f)]
     public void OffCenterImpulseUsesScaleAndRotationWithoutTranslation(float scaleX, float scaleY, float scaleZ)
     {
-        var body = PhysicsObjects.Body(mass: 2, inertia: 4, position: new Vector3(5, -2, 3),
+        const float mass = 2f;
+        const float inertia = 4f;
+        var scale = new Vector3(scaleX, scaleY, scaleZ);
+        var body = PhysicsObjects.Body(mass, inertia, position: new Vector3(5, -2, 3),
             orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
-        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+        body.Transform.Scale = scale;
         var initialAngularVelocity = new Vector3(1, -2, 3);
         body.AngularVelocity = initialAngularVelocity;
+        var impulse = new Vector3(4, -6, 8);
+        var localApplicationPoint = new Vector3(1, 2, 3);
 
-        body.ApplyImpulse(new Vector3(4, -6, 8), new Vector3(1, 2, 3));
+        body.ApplyImpulse(impulse, localApplicationPoint);
 
-        var expectedAngularChange = new Vector3(
-            2 * scaleX + 4.5f * scaleZ, 4 * scaleY + 3 * scaleZ, 3 * scaleY - scaleX);
-        PhysicsAssert.VectorNear(new Vector3(2, -3, 4), body.Velocity);
-        PhysicsAssert.VectorNear(initialAngularVelocity + expectedAngularChange, body.AngularVelocity);
+        var leverArm = ExpectedWorldOffsetAfterQuarterTurnAboutZ(localApplicationPoint, scale);
+        var angularImpulse = Vector3.Cross(leverArm, impulse);
+        var expectedAngularVelocity = initialAngularVelocity + angularImpulse / inertia;
+        PhysicsAssert.VectorNear(impulse / mass, body.Velocity);
+        PhysicsAssert.VectorNear(expectedAngularVelocity, body.AngularVelocity);
     }
 
     [Theory]
@@ -57,17 +63,25 @@ public class RigidBodyTests
     [InlineData(2f, 3f, 4f)]
     public void OffCenterForceUsesScaleAndRotationWithoutTranslation(float scaleX, float scaleY, float scaleZ)
     {
-        var body = PhysicsObjects.Body(mass: 2, inertia: 4, position: new Vector3(5, -2, 3),
+        const float mass = 2f;
+        const float inertia = 4f;
+        const float deltaTime = 0.5f;
+        var scale = new Vector3(scaleX, scaleY, scaleZ);
+        var body = PhysicsObjects.Body(mass, inertia, position: new Vector3(5, -2, 3),
             orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
-        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
+        body.Transform.Scale = scale;
+        var force = new Vector3(4, -6, 8);
+        var localApplicationPoint = new Vector3(1, 2, 3);
 
-        body.ApplyForce(new Vector3(4, -6, 8), new Vector3(1, 2, 3));
+        body.ApplyForce(force, localApplicationPoint);
         PhysicsAssert.AtRest(body);
-        body.IntegrateVelocities(0.5f);
+        body.IntegrateVelocities(deltaTime);
 
-        var expectedAngularVelocity = new Vector3(
-            scaleX + 2.25f * scaleZ, 2 * scaleY + 1.5f * scaleZ, 1.5f * scaleY - 0.5f * scaleX);
-        PhysicsAssert.VectorNear(new Vector3(1, -1.5f, 2), body.Velocity);
+        var leverArm = ExpectedWorldOffsetAfterQuarterTurnAboutZ(localApplicationPoint, scale);
+        var torque = Vector3.Cross(leverArm, force);
+        var expectedAngularVelocity = torque / inertia * deltaTime;
+        var expectedLinearVelocity = force / mass * deltaTime;
+        PhysicsAssert.VectorNear(expectedLinearVelocity, body.Velocity);
         PhysicsAssert.VectorNear(expectedAngularVelocity, body.AngularVelocity);
     }
 
@@ -120,16 +134,21 @@ public class RigidBodyTests
     {
         var body = PhysicsObjects.Body(position: new Vector3(5, -2, 3),
             orientation: Quaternion.CreateFromAxisAngle(Vector3.UnitZ, MathF.PI / 2));
-        body.Transform.Scale = new Vector3(scaleX, scaleY, scaleZ);
-        body.Velocity = new Vector3(2, -1, 4);
-        body.AngularVelocity = new Vector3(1, 2, 3);
+        var scale = new Vector3(scaleX, scaleY, scaleZ);
+        var linearVelocity = new Vector3(2, -1, 4);
+        var angularVelocity = new Vector3(1, 2, 3);
+        body.Transform.Scale = scale;
+        body.Velocity = linearVelocity;
+        body.AngularVelocity = angularVelocity;
+        var localPoint = new Vector3(1, 2, 3);
 
-        var pointVelocity = body.GetVelocityAtPoint(new Vector3(1, 2, 3));
+        var pointVelocity = body.GetVelocityAtPoint(localPoint);
 
-        var expectedVelocity = new Vector3(
-            2 + 6 * scaleZ - 3 * scaleX, -1 - 6 * scaleY - 3 * scaleZ, 4 + scaleX + 4 * scaleY);
-        PhysicsAssert.VectorNear(expectedVelocity, pointVelocity);
-        PhysicsAssert.VectorNear(body.Velocity, body.GetVelocityAtPoint(Vector3.Zero));
+        var worldOffset = ExpectedWorldOffsetAfterQuarterTurnAboutZ(localPoint, scale);
+        var rotationalVelocity = Vector3.Cross(angularVelocity, worldOffset);
+        var expectedPointVelocity = linearVelocity + rotationalVelocity;
+        PhysicsAssert.VectorNear(expectedPointVelocity, pointVelocity);
+        PhysicsAssert.VectorNear(linearVelocity, body.GetVelocityAtPoint(Vector3.Zero));
     }
 
     [Fact]
@@ -171,5 +190,12 @@ public class RigidBodyTests
 
         PhysicsAssert.VectorNear(Vector3.UnitY * 2, body.Velocity);
         PhysicsAssert.VectorNear(Vector3.Zero, body.AngularVelocity);
+    }
+
+    private static Vector3 ExpectedWorldOffsetAfterQuarterTurnAboutZ(Vector3 localOffset, Vector3 scale)
+    {
+        var scaledOffset = localOffset * scale;
+        // A positive quarter turn about Z maps +X to +Y and +Y to -X.
+        return new Vector3(-scaledOffset.Y, scaledOffset.X, scaledOffset.Z);
     }
 }

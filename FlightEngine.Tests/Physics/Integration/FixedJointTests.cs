@@ -81,24 +81,33 @@ public class FixedJointTests
         var fixedBody = PhysicsObjects.Body(mass: 0, position: new Vector3(-2, 1, 3));
         var orientation = Quaternion.CreateFromYawPitchRoll(0.3f, -0.4f, 0.2f);
         var position = new Vector3(1, 2, 3);
-        var movingBody = PhysicsObjects.Body(mass: 2, inertia: 3, position: position,
-            orientation: orientation, gravity: Gravity.EarthGravityAcceleration);
+        var movingBody = PhysicsObjects.Body(
+            mass: 2,
+            inertia: 3,
+            position: position,
+            orientation: orientation,
+            gravity: Gravity.EarthGravityAcceleration);
         var joint = staticIsBodyA
             ? PhysicsObjects.Joint(fixedBody, movingBody, new Vector3(2, 4, -1))
             : PhysicsObjects.Joint(movingBody, fixedBody, new Vector3(2, 4, -1));
+
         var simulation = new PhysicsSimulation(fixedBody.GameObject, movingBody.GameObject, joint);
         var applier = movingBody.GameObject.GetComponent<ForceApplier>()!;
+        var thrust = new ThrustForce(
+            movingBody, movingBody.Transform.LocalForward, 30, movingBody.Transform.LocalLeft);
 
-        var thrust = new ThrustForce(movingBody, movingBody.Transform.LocalForward, 30,
-            movingBody.Transform.LocalLeft);
-
-        simulation.RunFor(durationSeconds: 5, stepsPerSecond,
+        simulation.RunFor(
+            durationSeconds: 5,
+            stepsPerSecond,
             beforeStep: _ => applier.ApplyForce(thrust),
-            afterStep: () =>
-            {
-                PhysicsAssert.PoseNear(position, orientation, movingBody, positionTolerance: 1e-4f);
-                PhysicsAssert.AtRest(fixedBody);
-            });
+            afterStep: AssertAttachmentHolds);
+        return;
+
+        void AssertAttachmentHolds(float _)
+        {
+            PhysicsAssert.PoseNear(position, orientation, movingBody, positionTolerance: 1e-4f);
+            PhysicsAssert.AtRest(fixedBody);
+        }
     }
 
     [Theory]
@@ -148,13 +157,21 @@ public class FixedJointTests
         bodyB.Velocity = Vector3.Cross(bodyB.AngularVelocity, bodyB.Transform.Position);
         var initialMomentum = PhysicsMeasurements.CalculateLinearMomentum(bodyA, bodyB);
 
-        simulation.RunFor(durationSeconds: 5, stepsPerSecond, afterStep: () =>
+        simulation.RunFor(durationSeconds: 5, stepsPerSecond, afterStep: AssertJointInvariants);
+        return;
+
+        void AssertJointInvariants(float _)
         {
-            PhysicsAssert.VectorNear(bodyA.Transform.TransformPoint(localAnchorA), bodyB.Transform.TransformPoint(localAnchorB), 0.01f);
-            PhysicsAssert.OrientationNear(relativeOrientation,
-                Quaternion.Inverse(bodyA.Transform.Orientation) * bodyB.Transform.Orientation);
-            PhysicsAssert.VectorNear(initialMomentum, PhysicsMeasurements.CalculateLinearMomentum(bodyA, bodyB), 1e-4f);
-        });
+            var worldAnchorA = bodyA.Transform.TransformPoint(localAnchorA);
+            var worldAnchorB = bodyB.Transform.TransformPoint(localAnchorB);
+            var actualRelativeOrientation =
+                Quaternion.Inverse(bodyA.Transform.Orientation) * bodyB.Transform.Orientation;
+            var momentum = PhysicsMeasurements.CalculateLinearMomentum(bodyA, bodyB);
+
+            PhysicsAssert.VectorNear(worldAnchorA, worldAnchorB, tolerance: 0.01f);
+            PhysicsAssert.OrientationNear(relativeOrientation, actualRelativeOrientation);
+            PhysicsAssert.VectorNear(initialMomentum, momentum, tolerance: 1e-4f);
+        }
     }
 
     [Fact]
@@ -165,18 +182,24 @@ public class FixedJointTests
         var endBody = PhysicsObjects.Body(position: Vector3.UnitX * 2);
         var firstJoint = PhysicsObjects.Joint(anchorBody, middleBody, new Vector3(0.5f, 1, 0));
         var secondJoint = PhysicsObjects.Joint(middleBody, endBody, new Vector3(1.5f, 1, 0));
-        var simulation = new PhysicsSimulation(anchorBody.GameObject, middleBody.GameObject, endBody.GameObject, firstJoint, secondJoint);
+        var simulation = new PhysicsSimulation(
+            anchorBody.GameObject, middleBody.GameObject, endBody.GameObject, firstJoint, secondJoint);
         var applier = endBody.GameObject.GetComponent<ForceApplier>()!;
 
         var thrust = new ThrustForce(endBody, -endBody.Transform.LocalUp, 10, endBody.Transform.LocalLeft);
 
-        simulation.RunFor(durationSeconds: 5, stepsPerSecond: 120,
+        simulation.RunFor(
+            durationSeconds: 5,
+            stepsPerSecond: 120,
             beforeStep: _ => applier.ApplyForce(thrust),
-            afterStep: () =>
-            {
-                PhysicsAssert.VectorNear(Vector3.UnitX, middleBody.Transform.Position, 0.01f);
-                PhysicsAssert.PoseNear(Vector3.UnitX * 2, Quaternion.Identity, endBody, positionTolerance: 0.01f);
-            });
+            afterStep: AssertChainStaysAttached);
+        return;
+
+        void AssertChainStaysAttached(float _)
+        {
+            PhysicsAssert.VectorNear(Vector3.UnitX, middleBody.Transform.Position, tolerance: 0.01f);
+            PhysicsAssert.PoseNear(Vector3.UnitX * 2, Quaternion.Identity, endBody, positionTolerance: 0.01f);
+        }
     }
 
     [Fact]
@@ -200,8 +223,8 @@ public class FixedJointTests
     {
         var bodyA = PhysicsObjects.Body(mass: 1, inertia: 0);
         var bodyB = PhysicsObjects.Body(mass: 2, inertia: 0, position: Vector3.UnitX);
-        var simulation = new PhysicsSimulation(bodyA.GameObject, bodyB.GameObject,
-            PhysicsObjects.Joint(bodyA, bodyB, Vector3.UnitY));
+        var joint = PhysicsObjects.Joint(bodyA, bodyB, Vector3.UnitY);
+        var simulation = new PhysicsSimulation(bodyA.GameObject, bodyB.GameObject, joint);
         bodyA.ApplyImpulse(Vector3.UnitY * 3, Vector3.Zero);
 
         simulation.RunFor(durationSeconds: 2, stepsPerSecond: 60);

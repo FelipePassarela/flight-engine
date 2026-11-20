@@ -27,14 +27,14 @@ internal sealed class PhysicsSimulation
         int durationSeconds,
         int stepsPerSecond,
         Action<int>? beforeStep = null,
-        Action? afterStep = null)
+        Action<float>? afterStep = null)
     {
         var deltaTime = 1f / stepsPerSecond;
         for (var step = 0; step < durationSeconds * stepsPerSecond; step++)
         {
             beforeStep?.Invoke(step);
             Step(deltaTime);
-            afterStep?.Invoke();
+            afterStep?.Invoke((float)(step + 1) / stepsPerSecond);
         }
     }
 

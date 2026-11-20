@@ -1,5 +1,6 @@
 using System.Numerics;
 using FlightEngine.Application;
+using FlightEngine.Core;
 using FlightEngine.Physics.Constraints;
 using FlightEngine.Physics.Forces;
 using FlightEngine.Physics.Tests.Physics.Support;
@@ -42,27 +43,30 @@ public class AirplaneTests
         var fuselage = airplane.Fuselage.GetComponent<RigidBody>()!;
         var wings = CaptureWingPositions(airplane);
         var applier = airplane.Fuselage.GetComponent<ForceApplier>()!;
-        var offCenterThrust = new ThrustForce(fuselage, fuselage.Transform.LocalForward, 10,
-            fuselage.Transform.LocalLeft);
+        var offCenterThrust = new ThrustForce(
+            fuselage, fuselage.Transform.LocalForward, 10, fuselage.Transform.LocalLeft);
+
+        var pulseStepCount = stepsPerSecond / 5;
 
         simulation.RunFor(durationSeconds: 5, stepsPerSecond,
-            beforeStep: step =>
-            {
-                // A short off-center pulse initiates rotation, then thrust acts at the center.
-                if (step < stepsPerSecond / 5)
-                    applier.ApplyForce(offCenterThrust);
-                else
-                    airplane.ApplyThrust(fuselage.Transform.LocalForward);
-            },
-            afterStep: () => AssertWingsStayAttached(fuselage, wings));
+            beforeStep: ApplyTorquePulseThenCenteredThrust,
+            afterStep: _ => AssertWingsStayAttached(fuselage, wings));
+        return;
+
+        void ApplyTorquePulseThenCenteredThrust(int step)
+        {
+            if (step < pulseStepCount)
+                applier.ApplyForce(offCenterThrust);
+            else
+                airplane.ApplyThrust(fuselage.Transform.LocalForward);
+        }
     }
 
     [Fact]
     public void CenteredThrustAcceleratesTheAirplaneInTheRequestedDirection()
     {
         var (airplane, simulation, bodies) = CreateAirplaneSimulation(Vector3.Zero);
-        foreach (var body in bodies)
-            body.GameObject.GetComponent<Gravity>()!.Active = false;
+        DisableGravity(bodies);
 
         var thrustDirection = Vector3.UnitZ;
         const float thrustNewtons = 10f;
@@ -72,9 +76,9 @@ public class AirplaneTests
             beforeStep: _ => airplane.ApplyThrust(thrustDirection));
 
         var totalMass = bodies.Sum(body => body.Mass);
-        var expectedVelocity = thrustDirection * (thrustNewtons * durationSeconds / totalMass);
-        var centerOfMassVelocity = PhysicsMeasurements.CalculateLinearMomentum(bodies) / totalMass;
-        PhysicsAssert.VectorNear(expectedVelocity, centerOfMassVelocity, 1e-3f);
+        var expectedCenterOfMassVelocity = thrustDirection * (thrustNewtons * durationSeconds / totalMass);
+        var actualCenterOfMassVelocity = PhysicsMeasurements.CalculateLinearMomentum(bodies) / totalMass;
+        PhysicsAssert.VectorNear(expectedCenterOfMassVelocity, actualCenterOfMassVelocity, tolerance: 1e-3f);
     }
 
     [Theory]
@@ -92,20 +96,28 @@ public class AirplaneTests
         var targetWing = (useLeftWing ? airplane.LeftWing : airplane.RightWing).GetComponent<RigidBody>()!;
         var wingLift = new ThrustForce(targetWing, targetWing.Transform.LocalUp, 5, targetWing.CenterOfMass);
 
+        var pulseStepCount = stepsPerSecond / 5;
+
         simulation.RunFor(durationSeconds: 1, stepsPerSecond,
-            beforeStep: step =>
-            {
-                if (step < stepsPerSecond / 5)
-                    targetWing.ApplyForce(wingLift.CalculateWorldForce(), wingLift.LocalApplicationPoint);
-            },
-            afterStep: () => AssertWingsStayAttached(fuselage, wings));
+            beforeStep: ApplyWingLiftPulse,
+            afterStep: _ => AssertWingsStayAttached(fuselage, wings));
 
         var expectedRollAxis = useLeftWing ? Vector3.UnitZ : -Vector3.UnitZ;
-        PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis,
-            minimumAxialSpeed: 0.25f, maximumOffAxisSpeed: 1e-3f);
+        PhysicsAssert.RotatingAroundAxis(
+            fuselage, expectedRollAxis, minimumAxialSpeed: 0.25f, maximumOffAxisSpeed: 1e-3f);
         PhysicsAssert.RotatedByAtLeast(Quaternion.Identity, fuselage.Transform.Orientation, minimumAngleDegrees: 17f);
         foreach (var (wing, _) in wings)
             PhysicsAssert.VectorNear(fuselage.AngularVelocity, wing.AngularVelocity, 1e-3f);
+        return;
+
+        void ApplyWingLiftPulse(int step)
+        {
+            if (step >= pulseStepCount)
+                return;
+
+            var worldForce = wingLift.CalculateWorldForce();
+            targetWing.ApplyForce(worldForce, wingLift.LocalApplicationPoint);
+        }
     }
 
     [Theory]
@@ -126,47 +138,50 @@ public class AirplaneTests
         var (airplane, simulation, bodies) = CreateAirplaneSimulation(position);
         var fuselage = airplane.Fuselage.GetComponent<RigidBody>()!;
 
-        // Rotate the initialized assembly as a whole, preserving the joints' local anchors.
-        foreach (var body in bodies)
-        {
-            body.Transform.Position = position + Vector3.Transform(body.Transform.Position - position, initialOrientation);
-            body.Transform.Orientation = initialOrientation;
-            body.Velocity = initialVelocity;
-            body.GameObject.GetComponent<Gravity>()!.Active = false;
-        }
+        SetInitialAssemblyMotion(bodies, position, initialOrientation, initialVelocity);
+        DisableGravity(bodies);
 
         var initialCenter = PhysicsMeasurements.CalculateCenterOfMass(bodies);
         var initialMomentum = PhysicsMeasurements.CalculateLinearMomentum(bodies);
         var rollAxis = fuselage.Transform.WorldForward;
-        var completedSteps = 0;
 
-        simulation.RunFor(durationSeconds: 2, stepsPerSecond,
+        simulation.RunFor(
+            durationSeconds: 2,
+            stepsPerSecond,
             beforeStep: _ => airplane.ApplyRoll(rollInput),
-            afterStep: () =>
-            {
-                completedSteps++;
-                var elapsedTime = (float)completedSteps / stepsPerSecond;
-                var expectedCenter = initialCenter + initialVelocity * elapsedTime;
-                PhysicsAssert.VectorNear(initialMomentum, PhysicsMeasurements.CalculateLinearMomentum(bodies), 1e-3f);
-                PhysicsAssert.VectorNear(expectedCenter, PhysicsMeasurements.CalculateCenterOfMass(bodies), 1e-3f);
-            });
+            afterStep: AssertCenterOfMassMotion);
 
-        if (rollInput == 0f)
-        {
-            PhysicsAssert.VectorNear(Vector3.Zero, fuselage.AngularVelocity);
-            PhysicsAssert.OrientationNear(initialOrientation, fuselage.Transform.Orientation);
-        }
-        else
-        {
-            var expectedRollAxis = rollAxis * rollInput;
-            PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis,
-                minimumAxialSpeed: 1f, maximumOffAxisSpeed: 1e-3f);
-            PhysicsAssert.RotatedByAtLeast(
-                initialOrientation, fuselage.Transform.Orientation, minimumAngleDegrees: 17f);
-        }
+        AssertRollResponse();
 
         foreach (var body in bodies)
             PhysicsAssert.OrientationNear(fuselage.Transform.Orientation, body.Transform.Orientation);
+        return;
+
+        void AssertCenterOfMassMotion(float elapsedSeconds)
+        {
+            var expectedCenter = initialCenter + initialVelocity * elapsedSeconds;
+            var actualCenter = PhysicsMeasurements.CalculateCenterOfMass(bodies);
+            var actualMomentum = PhysicsMeasurements.CalculateLinearMomentum(bodies);
+            PhysicsAssert.VectorNear(expectedCenter, actualCenter, tolerance: 1e-3f);
+            PhysicsAssert.VectorNear(initialMomentum, actualMomentum, tolerance: 1e-3f);
+        }
+
+        void AssertRollResponse()
+        {
+            var finalOrientation = fuselage.Transform.Orientation;
+            if (rollInput == 0f)
+            {
+                PhysicsAssert.VectorNear(Vector3.Zero, fuselage.AngularVelocity);
+                PhysicsAssert.OrientationNear(initialOrientation, finalOrientation);
+                return;
+            }
+
+            var expectedRollAxis = rollAxis * rollInput;
+            PhysicsAssert.RotatingAroundAxis(
+                fuselage, expectedRollAxis, minimumAxialSpeed: 1f, maximumOffAxisSpeed: 1e-3f);
+            PhysicsAssert.RotatedByAtLeast(
+                initialOrientation, finalOrientation, minimumAngleDegrees: 17f);
+        }
     }
 
     [Fact]
@@ -194,20 +209,47 @@ public class AirplaneTests
         return (airplane, simulation, bodies);
     }
 
+    private static void SetInitialAssemblyMotion(
+        RigidBody[] bodies, Vector3 fuselagePosition, Quaternion orientation, Vector3 velocity)
+    {
+        // Rotating the assembly together preserves the joints' local anchors.
+        foreach (var body in bodies)
+        {
+            var offsetFromFuselage = body.Transform.Position - fuselagePosition;
+            body.Transform.Position = fuselagePosition + Vector3.Transform(offsetFromFuselage, orientation);
+            body.Transform.Orientation = orientation;
+            body.Velocity = velocity;
+        }
+    }
+
+    private static void DisableGravity(RigidBody[] bodies)
+    {
+        foreach (var body in bodies)
+            body.GameObject.GetComponent<Gravity>()!.Active = false;
+    }
+
     private static (RigidBody Body, Vector3 LocalPosition)[] CaptureWingPositions(Airplane airplane)
     {
-        return new[] { airplane.LeftWing, airplane.RightWing }
-            .Select(wing => wing.GetComponent<RigidBody>()!)
-            .Select(body => (Body: body,
-                LocalPosition: airplane.Fuselage.Transform.InverseTransformPoint(body.Transform.Position)))
-            .ToArray();
+        var fuselageTransform = airplane.Fuselage.Transform;
+        return [CaptureWingPosition(airplane.LeftWing), CaptureWingPosition(airplane.RightWing)];
+
+        (RigidBody Body, Vector3 LocalPosition) CaptureWingPosition(GameObject wing)
+        {
+            var body = wing.GetComponent<RigidBody>()!;
+            var worldPosition = body.Transform.Position;
+            var localPosition = fuselageTransform.InverseTransformPoint(worldPosition);
+            return (body, localPosition);
+        }
     }
 
     private static void AssertWingsStayAttached(
         RigidBody fuselage, (RigidBody Body, Vector3 LocalPosition)[] wings)
     {
+        var fuselageTransform = fuselage.Transform;
         foreach (var (wing, localPosition) in wings)
-            PhysicsAssert.PoseNear(fuselage.Transform.TransformPoint(localPosition),
-                fuselage.Transform.Orientation, wing, positionTolerance: 0.01f);
+        {
+            var expectedPosition = fuselageTransform.TransformPoint(localPosition);
+            PhysicsAssert.PoseNear(expectedPosition, fuselageTransform.Orientation, wing, positionTolerance: 0.01f);
+        }
     }
 }
