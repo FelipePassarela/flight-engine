@@ -28,8 +28,7 @@ public class PhysicsWorldTests
         PhysicsAssert.VectorNear(new Vector3(0, -1, 1), body.Velocity);
         PhysicsAssert.VectorNear(new Vector3(0, -0.5f, 0.5f), body.Transform.Position);
         PhysicsAssert.VectorNear(Vector3.UnitX * 0.5f, body.AngularVelocity);
-        PhysicsAssert.OrientationNear(Quaternion.CreateFromAxisAngle(Vector3.UnitX, 0.25f),
-            body.Transform.Orientation);
+        PhysicsAssert.OrientationNear(Quaternion.CreateFromAxisAngle(Vector3.UnitX, 0.25f), body.Transform.Orientation);
         Assert.Null(applier.GetForceGenerator<ThrustForce>());
     }
 
@@ -53,8 +52,9 @@ public class PhysicsWorldTests
         PhysicsAssert.VectorNear(lightBody.Transform.Position, heavyBody.Transform.Position);
         // Semi-implicit Euler has a first-order position error of |g| * T * dt / 2.
         var analyticalPosition = gravity * (0.5f * duration * duration);
-        PhysicsAssert.VectorNear(analyticalPosition, lightBody.Transform.Position,
-            gravity.Length() * duration * deltaTime / 2 + 1e-3f);
+        var tolerance = gravity.Length() * duration * deltaTime / 2 + 1e-3f;
+        PhysicsAssert.VectorNear(
+            analyticalPosition, lightBody.Transform.Position, tolerance);
         PhysicsAssert.VectorNear(Vector3.Zero, lightBody.AngularVelocity);
     }
 
@@ -63,19 +63,22 @@ public class PhysicsWorldTests
     {
         var position = new Vector3(1, 2, 3);
         var orientation = Quaternion.CreateFromYawPitchRoll(0.3f, -0.2f, 0.4f);
-        var body = PhysicsObjects.Body(mass: 0, position: position,
-            orientation: orientation, gravity: Gravity.EarthGravityAcceleration);
+        var body = PhysicsObjects.Body(
+            mass: 0, position: position, orientation: orientation, gravity: Gravity.EarthGravityAcceleration);
         var simulation = new PhysicsSimulation(body.GameObject);
         body.Velocity = body.AngularVelocity = Vector3.One;
 
-        simulation.RunFor(durationSeconds: 2, stepsPerSecond: 60, beforeStep: _ =>
-        {
-            body.ApplyImpulse(Vector3.UnitY * 10, body.Transform.LocalLeft);
-            body.ApplyForce(Vector3.UnitZ * 10, body.Transform.LocalUp);
-        });
+        simulation.RunFor(durationSeconds: 2, stepsPerSecond: 60, beforeStep: ApplyOffCenterLoads);
 
         PhysicsAssert.PoseNear(position, orientation, body);
         PhysicsAssert.AtRest(body);
+        return;
+
+        void ApplyOffCenterLoads(int _)
+        {
+            body.ApplyImpulse(Vector3.UnitY * 10, body.Transform.LocalLeft);
+            body.ApplyForce(Vector3.UnitZ * 10, body.Transform.LocalUp);
+        }
     }
 
     [Fact]
@@ -102,14 +105,19 @@ public class PhysicsWorldTests
         var simulation = new PhysicsSimulation(lightBody.GameObject, heavyBody.GameObject, spring);
         var initialCenter = PhysicsMeasurements.CalculateCenterOfMass(lightBody, heavyBody);
 
-        simulation.RunFor(durationSeconds: 10, stepsPerSecond, afterStep: () =>
-        {
-            PhysicsAssert.VectorNear(Vector3.Zero, PhysicsMeasurements.CalculateLinearMomentum(lightBody, heavyBody), 1e-4f);
-            PhysicsAssert.VectorNear(initialCenter, PhysicsMeasurements.CalculateCenterOfMass(lightBody, heavyBody), 1e-4f);
-        });
+        simulation.RunFor(durationSeconds: 10, stepsPerSecond, afterStep: AssertCenterOfMassStaysFixed);
 
         Assert.InRange(Vector3.Distance(lightBody.Transform.Position, heavyBody.Transform.Position), 0.999f, 1.001f);
         PhysicsAssert.VectorNear(Vector3.Zero, lightBody.Velocity, 1e-3f);
         PhysicsAssert.VectorNear(Vector3.Zero, heavyBody.Velocity, 1e-3f);
+        return;
+
+        void AssertCenterOfMassStaysFixed(float _)
+        {
+            var momentum = PhysicsMeasurements.CalculateLinearMomentum(lightBody, heavyBody);
+            var center = PhysicsMeasurements.CalculateCenterOfMass(lightBody, heavyBody);
+            PhysicsAssert.VectorNear(Vector3.Zero, momentum, tolerance: 1e-4f);
+            PhysicsAssert.VectorNear(initialCenter, center, tolerance: 1e-4f);
+        }
     }
 }
