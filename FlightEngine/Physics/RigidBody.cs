@@ -102,13 +102,17 @@ public class RigidBody : Component
 
     public void ApplyImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
     {
+        if (!AreComponentsFinite(worldImpulse) || !AreComponentsFinite(localApplicationPoint))
+            return;
+
         _linearMotion.ApplyImpulse(worldImpulse);
         _angularMotion.ApplyImpulse(worldImpulse, localApplicationPoint, Transform);
     }
 
     public void ApplyAngularImpulse(Vector3 worldAngularImpulse)
     {
-        _angularMotion.ApplyImpulse(worldAngularImpulse);
+        if (AreComponentsFinite(worldAngularImpulse))
+            _angularMotion.ApplyImpulse(worldAngularImpulse);
     }
 
     public Vector3 GetVelocityAtPoint(Vector3 localPoint)
@@ -117,4 +121,6 @@ public class RigidBody : Component
         var angularVelocityAtPoint = Vector3.Cross(AngularVelocity, displacement);
         return Velocity + angularVelocityAtPoint;
     }
+
+    private static bool AreComponentsFinite(Vector3 vector) => Vector3.AllWhereAllBitsSet(Vector3.IsFinite(vector));
 }
