@@ -1,4 +1,5 @@
 using System.Numerics;
+using FlightEngine.Numerics;
 
 namespace FlightEngine.Physics.Constraints;
 
@@ -15,7 +16,7 @@ public class DistanceJoint(
     public Vector3 LocalAnchorA { get; } = localAnchorA;
     public Vector3 LocalAnchorB { get; } = localAnchorB;
 
-    public float TargetDistance { get; } = IsPositiveFinite(targetDistance)
+    public float TargetDistance { get; } = targetDistance.IsPositiveFinite()
         ? targetDistance
         : throw new ArgumentOutOfRangeException(
             nameof(targetDistance), targetDistance, "Target distance must be positive and finite.");
@@ -27,7 +28,7 @@ public class DistanceJoint(
     public override void Prepare(float deltaTime)
     {
         _preparedStep = null;
-        if (!IsPositiveFinite(deltaTime))
+        if (!deltaTime.IsPositiveFinite())
             return;
 
         var anchorA = BodyA.Transform.TransformPoint(LocalAnchorA);
@@ -38,7 +39,7 @@ public class DistanceJoint(
         var direction = currentDistance > 0.0f ? separation / currentDistance : Vector3.UnitX;
 
         var effectiveMass = GetEffectiveMass(direction);
-        if (!IsPositiveFinite(effectiveMass))
+        if (!effectiveMass.IsPositiveFinite())
             return;
 
         var distanceError = currentDistance - TargetDistance;
@@ -46,14 +47,12 @@ public class DistanceJoint(
         _preparedStep = new PreparedStep(direction, positionBias, effectiveMass);
     }
 
-    private static bool IsPositiveFinite(float number) => number > 0.0f && float.IsFinite(number);
-
     private float GetEffectiveMass(Vector3 direction)
     {
         var angularContributionA = GetAngularInverseMassContribution(BodyA, LocalAnchorA, direction);
         var angularContributionB = GetAngularInverseMassContribution(BodyB, LocalAnchorB, direction);
         var inverseEffectiveMass = BodyA.InverseMass + BodyB.InverseMass + angularContributionA + angularContributionB;
-        return IsPositiveFinite(inverseEffectiveMass) ? 1.0f / inverseEffectiveMass : 0.0f;
+        return inverseEffectiveMass.IsPositiveFinite() ? 1.0f / inverseEffectiveMass : 0.0f;
     }
 
     private static float GetAngularInverseMassContribution(RigidBody body, Vector3 localAnchor, Vector3 direction)
@@ -65,7 +64,7 @@ public class DistanceJoint(
 
     public override void SolveVelocity(float deltaTime)
     {
-        if (_preparedStep is not { } step || !IsPositiveFinite(deltaTime))
+        if (_preparedStep is not { } step || !deltaTime.IsPositiveFinite())
             return;
 
         var relativeSpeed = GetRelativeVelocityAlong(step.Direction);
