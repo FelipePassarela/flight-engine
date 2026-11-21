@@ -26,9 +26,12 @@ public class AileronTests
     }
 
     [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void AileronRotatesAboutItsHingeWhileThePivotStaysAttached(bool useLeftWing)
+    [InlineData(true, -1f, 60)]
+    [InlineData(true, -1f, 120)]
+    [InlineData(false, 1f, 60)]
+    [InlineData(false, 1f, 120)]
+    public void AileronStopsAtItsAngleLimitWhileThePivotStaysAttached(
+        bool useLeftWing, float direction, int stepsPerSecond)
     {
         var flightScene = new FlightScene();
         var airplane = flightScene.Airplane;
@@ -41,14 +44,16 @@ public class AileronTests
 
         const float angularImpulse = 0.012f;
         var worldHingeAxis = wing.Transform.TransformDirection(hinge.LocalAxisA);
-        hinge.BodyB.ApplyAngularImpulse(worldHingeAxis * angularImpulse);
+        hinge.BodyB.ApplyAngularImpulse(worldHingeAxis * (direction * angularImpulse));
 
-        simulation.RunFor(durationSeconds: 1, stepsPerSecond: 60,
+        simulation.RunFor(durationSeconds: 1, stepsPerSecond,
             afterStep: _ => AssertCoincidentAnchors(hinge, tolerance: 0.005f));
 
         var inverseWingOrientation = Quaternion.Inverse(wing.Transform.Orientation);
         var relativeAileronOrientation = inverseWingOrientation * hinge.BodyB.Transform.Orientation;
-        PhysicsAssert.RotatedByAtLeast(Quaternion.Identity, relativeAileronOrientation, minimumAngleDegrees: 20f);
+        const float stopAngle = 25f * (MathF.PI / 180f);
+        var stopOrientation = Quaternion.CreateFromAxisAngle(hinge.LocalAxisA, direction * stopAngle);
+        PhysicsAssert.OrientationNear(stopOrientation, relativeAileronOrientation, toleranceRadians: 2e-3f);
         AssertAlignedAxes(hinge);
     }
 

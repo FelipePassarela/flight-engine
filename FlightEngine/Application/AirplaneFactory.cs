@@ -13,6 +13,8 @@ public static class AirplaneFactory
 {
     private static readonly Vector3 WingSize = new(2.2f, 0.12f, 0.9f);
     private static readonly Vector3 AileronSize = new(1.0f, 0.08f, 0.28f);
+    private const float AileronMaximumDeflection = 25f * (MathF.PI / 180f);
+    private static readonly HingeAngleLimits AileronLimits = new(-AileronMaximumDeflection, AileronMaximumDeflection);
 
     public static (Airplane Airplane, IReadOnlyList<GameObject> GameObjects) Create(Vector3 position)
     {
@@ -127,6 +129,7 @@ public static class AirplaneFactory
                 localAnchorA: wingAnchor,
                 localAnchorB: aileronAnchor,
                 localAxisA: wing.Transform.LocalLeft,
-                localAxisB: aileron.Transform.LocalLeft)
+                localAxisB: aileron.Transform.LocalLeft,
+                angleLimits: AileronLimits)
         ]);
 }

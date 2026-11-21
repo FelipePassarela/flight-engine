@@ -5,23 +5,30 @@ namespace FlightEngine.Physics.Constraints;
 
 /// <summary>
 /// Keeps two body-local anchors coincident and aligns the body-local axes in world space.
-/// Allows relative rotation around the shared axis.
+/// Allows relative rotation around the shared axis, optionally within angular limits.
 /// </summary>
 public class HingeJoint : Constraint
 {
     private const int FirstAngularRow = AnchorCoincidenceRows.Count;
     private const int SecondAngularRow = FirstAngularRow + 1;
-    private const int Dimension = SecondAngularRow + 1;
+    private const int BilateralRowCount = SecondAngularRow + 1;
     private const float ErrorReduction = 0.1f;
     private const float AlignmentSineThreshold = 1e-6f;
 
-    private readonly BodyPairConstraintSystem _system = new(Dimension);
+    private readonly BodyPairConstraintSystem _system;
+    private readonly HingeLimit? _limit;
     private Vector3 _firstTangent;
     private Vector3 _secondTangent;
     private bool _prepared;
 
-    public HingeJoint(RigidBody bodyA, RigidBody bodyB,
-        Vector3 localAnchorA, Vector3 localAnchorB, Vector3 localAxisA, Vector3 localAxisB)
+    public HingeJoint(
+        RigidBody bodyA,
+        RigidBody bodyB,
+        Vector3 localAnchorA,
+        Vector3 localAnchorB,
+        Vector3 localAxisA,
+        Vector3 localAxisB,
+        HingeAngleLimits? angleLimits = null)
     {
         ValidateBodies(bodyA, bodyB);
         ValidateAnchor(localAnchorA, nameof(localAnchorA));
@@ -33,6 +40,10 @@ public class HingeJoint : Constraint
         LocalAnchorB = localAnchorB;
         LocalAxisA = NormalizeAxis(localAxisA, nameof(localAxisA));
         LocalAxisB = NormalizeAxis(localAxisB, nameof(localAxisB));
+
+        var rowCount = angleLimits is null ? BilateralRowCount : BilateralRowCount + 1;
+        _system = new BodyPairConstraintSystem(rowCount);
+        _limit = angleLimits is null ? null : new HingeLimit(bodyA, bodyB, _system, angleLimits);
     }
 
     public RigidBody BodyA { get; }
@@ -42,6 +53,11 @@ public class HingeJoint : Constraint
     public Vector3 LocalAxisA { get; }
     public Vector3 LocalAxisB { get; }
 
+    /// <summary>
+    /// Optional limits measured from the pose at the first valid preparation of the joint.
+    /// </summary>
+    public HingeAngleLimits? AngleLimits => _limit?.Limits;
+
     public override void Prepare(float deltaTime)
     {
         _prepared = false;
@@ -50,7 +66,7 @@ public class HingeJoint : Constraint
 
         var biasScale = ErrorReduction / deltaTime;
         AnchorCoincidenceRows.Set(_system, BodyA, LocalAnchorA, BodyB, LocalAnchorB, biasScale);
-        SetAxisAlignmentRows(biasScale);
+        PrepareAngularRows(deltaTime, biasScale);
         _system.Prepare(BodyA, BodyB);
         _prepared = true;
     }
@@ -60,13 +76,13 @@ public class HingeJoint : Constraint
         if (!_prepared || !deltaTime.IsPositiveFinite())
             return;
 
-        Span<double> impulseComponents = stackalloc double[Dimension];
-        _system.Solve(BodyA, BodyB, impulseComponents);
+        Span<double> impulseComponents = stackalloc double[_system.Dimension];
+        SolveImpulses(impulseComponents);
         AnchorCoincidenceRows.ApplyImpulse(BodyA, LocalAnchorA, BodyB, LocalAnchorB, impulseComponents);
-        ApplyAlignmentImpulse(impulseComponents);
+        ApplyAngularImpulse(impulseComponents);
     }
 
-    private void SetAxisAlignmentRows(float biasScale)
+    private void PrepareAngularRows(float deltaTime, float biasScale)
     {
         var worldAxisA = BodyA.Transform.TransformDirection(LocalAxisA);
         var worldAxisB = BodyB.Transform.TransformDirection(LocalAxisB);
@@ -77,6 +93,16 @@ public class HingeJoint : Constraint
         var angularBias = rotationError * biasScale;
         _system.SetRelativeAngularRow(FirstAngularRow, _firstTangent, angularBias);
         _system.SetRelativeAngularRow(SecondAngularRow, _secondTangent, angularBias);
+
+        _limit?.Prepare(worldAxisA, _firstTangent, rotationError, deltaTime);
+    }
+
+    private void SolveImpulses(Span<double> impulseComponents)
+    {
+        if (_limit is null)
+            _system.Solve(BodyA, BodyB, impulseComponents);
+        else
+            _limit.Solve(impulseComponents);
     }
 
     private static Vector3 CalculatePerpendicular(Vector3 axis)
@@ -102,10 +128,13 @@ public class HingeJoint : Constraint
         return cross * (angle / sine);
     }
 
-    private void ApplyAlignmentImpulse(ReadOnlySpan<double> impulseComponents)
+    private void ApplyAngularImpulse(ReadOnlySpan<double> impulseComponents)
     {
         var angularImpulse = (float)impulseComponents[FirstAngularRow] * _firstTangent +
                              (float)impulseComponents[SecondAngularRow] * _secondTangent;
+        if (_limit is not null)
+            angularImpulse += _limit.CalculateAngularImpulse(impulseComponents);
+
         BodyA.ApplyAngularImpulse(-angularImpulse);
         BodyB.ApplyAngularImpulse(angularImpulse);
     }
