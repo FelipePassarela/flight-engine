@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using FlightEngine.Core;
+using FlightEngine.Numerics;
 using FlightEngine.Physics.Motion;
 
 namespace FlightEngine.Physics;
@@ -102,7 +103,7 @@ public class RigidBody : Component
 
     public void ApplyImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
     {
-        if (!AreComponentsFinite(worldImpulse) || !AreComponentsFinite(localApplicationPoint))
+        if (!worldImpulse.AllComponentsAreFinite() || !localApplicationPoint.AllComponentsAreFinite())
             return;
 
         _linearMotion.ApplyImpulse(worldImpulse);
@@ -111,7 +112,7 @@ public class RigidBody : Component
 
     public void ApplyAngularImpulse(Vector3 worldAngularImpulse)
     {
-        if (AreComponentsFinite(worldAngularImpulse))
+        if (worldAngularImpulse.AllComponentsAreFinite())
             _angularMotion.ApplyImpulse(worldAngularImpulse);
     }
 
@@ -121,6 +122,4 @@ public class RigidBody : Component
         var angularVelocityAtPoint = Vector3.Cross(AngularVelocity, displacement);
         return Velocity + angularVelocityAtPoint;
     }
-
-    private static bool AreComponentsFinite(Vector3 vector) => Vector3.AllWhereAllBitsSet(Vector3.IsFinite(vector));
 }

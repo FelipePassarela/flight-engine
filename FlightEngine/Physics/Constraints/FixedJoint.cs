@@ -5,8 +5,9 @@ namespace FlightEngine.Physics.Constraints;
 
 public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) : Constraint
 {
+    private const int FirstOrientationRow = AnchorCoincidenceRows.Count;
     private const int OrientationRowCount = 3;
-    private const int Dimension = AnchorCoincidenceRows.Count + OrientationRowCount;
+    private const int Dimension = FirstOrientationRow + OrientationRowCount;
     private const float ErrorReduction = 0.1f;
     private const float HalfAngleSineThreshold = 1e-6f;
     private Vector3 _localAnchorA;
@@ -47,18 +48,19 @@ public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) 
         if (!_prepared || !deltaTime.IsPositiveFinite())
             return;
 
-        Span<double> impulse = stackalloc double[Dimension];
-        _system.Solve(bodyA, bodyB, impulse);
-        ApplyImpulses(impulse);
+        Span<double> impulseComponents = stackalloc double[Dimension];
+        _system.Solve(bodyA, bodyB, impulseComponents);
+        AnchorCoincidenceRows.ApplyImpulse(bodyA, _localAnchorA, bodyB, _localAnchorB, impulseComponents);
+        ApplyOrientationImpulse(impulseComponents);
     }
 
-    private void ApplyImpulses(ReadOnlySpan<double> impulse)
+    private void ApplyOrientationImpulse(ReadOnlySpan<double> impulseComponents)
     {
-        var linearImpulse = new Vector3((float)impulse[0], (float)impulse[1], (float)impulse[2]);
-        var angularImpulse = new Vector3((float)impulse[3], (float)impulse[4], (float)impulse[5]);
-        bodyA.ApplyImpulse(-linearImpulse, _localAnchorA);
+        var angularImpulse = new Vector3(
+            (float)impulseComponents[FirstOrientationRow],
+            (float)impulseComponents[FirstOrientationRow + 1],
+            (float)impulseComponents[FirstOrientationRow + 2]);
         bodyA.ApplyAngularImpulse(-angularImpulse);
-        bodyB.ApplyImpulse(linearImpulse, _localAnchorB);
         bodyB.ApplyAngularImpulse(angularImpulse);
     }
 
@@ -100,9 +102,8 @@ public class FixedJoint(RigidBody bodyA, RigidBody bodyB, Vector3 contactPoint) 
         for (var i = 0; i < OrientationRowCount; i++)
         {
             var axis = i switch { 0 => Vector3.UnitX, 1 => Vector3.UnitY, _ => Vector3.UnitZ };
-            var rowIndex = AnchorCoincidenceRows.Count + i;
-            var bias = Vector3.Dot(axis, angularBias);
-            _system.SetRow(rowIndex, Vector3.Zero, -axis, axis, bias);
+            var rowIndex = FirstOrientationRow + i;
+            _system.SetRelativeAngularRow(rowIndex, axis, angularBias);
         }
     }
 }
