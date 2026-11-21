@@ -45,14 +45,7 @@ public class BallJoint : Constraint
 
         Span<double> impulseComponents = stackalloc double[AnchorCoincidenceRows.Count];
         _system.Solve(BodyA, BodyB, impulseComponents);
-        ApplyAnchorImpulse(impulseComponents);
-    }
-
-    private void ApplyAnchorImpulse(ReadOnlySpan<double> impulseComponents)
-    {
-        var impulse = new Vector3((float)impulseComponents[0], (float)impulseComponents[1], (float)impulseComponents[2]);
-        BodyA.ApplyImpulse(-impulse, LocalAnchorA);
-        BodyB.ApplyImpulse(impulse, LocalAnchorB);
+        AnchorCoincidenceRows.ApplyImpulse(BodyA, LocalAnchorA, BodyB, LocalAnchorB, impulseComponents);
     }
 
     private static void ValidateBodies(RigidBody bodyA, RigidBody bodyB)
@@ -65,7 +58,7 @@ public class BallJoint : Constraint
 
     private static void ValidateAnchor(Vector3 localAnchor, string parameterName)
     {
-        if (!localAnchor.HasFiniteComponents())
+        if (!localAnchor.AllComponentsAreFinite())
             throw new ArgumentOutOfRangeException(parameterName, localAnchor, "Anchor coordinates must be finite.");
     }
 }

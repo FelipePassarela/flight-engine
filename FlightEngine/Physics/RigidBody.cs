@@ -103,7 +103,7 @@ public class RigidBody : Component
 
     public void ApplyImpulse(Vector3 worldImpulse, Vector3 localApplicationPoint)
     {
-        if (!worldImpulse.HasFiniteComponents() || !localApplicationPoint.HasFiniteComponents())
+        if (!worldImpulse.AllComponentsAreFinite() || !localApplicationPoint.AllComponentsAreFinite())
             return;
 
         _linearMotion.ApplyImpulse(worldImpulse);
@@ -112,7 +112,7 @@ public class RigidBody : Component
 
     public void ApplyAngularImpulse(Vector3 worldAngularImpulse)
     {
-        if (worldAngularImpulse.HasFiniteComponents())
+        if (worldAngularImpulse.AllComponentsAreFinite())
             _angularMotion.ApplyImpulse(worldAngularImpulse);
     }
 

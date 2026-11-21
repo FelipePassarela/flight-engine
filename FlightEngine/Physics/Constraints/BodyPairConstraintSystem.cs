@@ -13,6 +13,12 @@ internal sealed class BodyPairConstraintSystem(int dimension)
         _rows[index] = new ConstraintRow(linear, angularA, angularB, bias);
     }
 
+    public void SetRelativeAngularRow(int index, Vector3 axis, Vector3 angularBias)
+    {
+        var bias = Vector3.Dot(axis, angularBias);
+        SetRow(index, Vector3.Zero, -axis, axis, bias);
+    }
+
     public void Prepare(RigidBody bodyA, RigidBody bodyB)
     {
         // Cholesky factorization of K = J M^-1 J^T, cached for all solver iterations.

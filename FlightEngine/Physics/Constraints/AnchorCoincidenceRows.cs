@@ -26,6 +26,20 @@ internal static class AnchorCoincidenceRows
         SetRowsForAxes(system, offsetA, offsetB, positionBias);
     }
 
+    public static void ApplyImpulse(
+        RigidBody bodyA,
+        Vector3 localAnchorA,
+        RigidBody bodyB,
+        Vector3 localAnchorB,
+        ReadOnlySpan<double> impulseComponents)
+    {
+        // The X, Y and Z rows form the world-space impulse on body B.
+        var impulse = new Vector3(
+            (float)impulseComponents[0], (float)impulseComponents[1], (float)impulseComponents[2]);
+        bodyA.ApplyImpulse(-impulse, localAnchorA);
+        bodyB.ApplyImpulse(impulse, localAnchorB);
+    }
+
     private static void SetRowsForAxes(
         BodyPairConstraintSystem system, Vector3 offsetA, Vector3 offsetB, Vector3 positionBias)
     {

@@ -62,7 +62,8 @@ public class HingeJoint : Constraint
 
         Span<double> impulseComponents = stackalloc double[Dimension];
         _system.Solve(BodyA, BodyB, impulseComponents);
-        ApplyImpulses(impulseComponents);
+        AnchorCoincidenceRows.ApplyImpulse(BodyA, LocalAnchorA, BodyB, LocalAnchorB, impulseComponents);
+        ApplyAlignmentImpulse(impulseComponents);
     }
 
     private void SetAxisAlignmentRows(float biasScale)
@@ -74,14 +75,8 @@ public class HingeJoint : Constraint
 
         var rotationError = CalculateAlignmentError(worldAxisA, worldAxisB, _firstTangent);
         var angularBias = rotationError * biasScale;
-        SetAngularRow(FirstAngularRow, _firstTangent, angularBias);
-        SetAngularRow(SecondAngularRow, _secondTangent, angularBias);
-    }
-
-    private void SetAngularRow(int row, Vector3 tangent, Vector3 angularBias)
-    {
-        var rowBias = Vector3.Dot(tangent, angularBias);
-        _system.SetRow(row, Vector3.Zero, -tangent, tangent, rowBias);
+        _system.SetRelativeAngularRow(FirstAngularRow, _firstTangent, angularBias);
+        _system.SetRelativeAngularRow(SecondAngularRow, _secondTangent, angularBias);
     }
 
     private static Vector3 CalculatePerpendicular(Vector3 axis)
@@ -107,15 +102,10 @@ public class HingeJoint : Constraint
         return cross * (angle / sine);
     }
 
-    private void ApplyImpulses(ReadOnlySpan<double> impulseComponents)
+    private void ApplyAlignmentImpulse(ReadOnlySpan<double> impulseComponents)
     {
-        var linearImpulse = new Vector3(
-            (float)impulseComponents[0], (float)impulseComponents[1], (float)impulseComponents[2]);
         var angularImpulse = (float)impulseComponents[FirstAngularRow] * _firstTangent +
                              (float)impulseComponents[SecondAngularRow] * _secondTangent;
-
-        BodyA.ApplyImpulse(-linearImpulse, LocalAnchorA);
-        BodyB.ApplyImpulse(linearImpulse, LocalAnchorB);
         BodyA.ApplyAngularImpulse(-angularImpulse);
         BodyB.ApplyAngularImpulse(angularImpulse);
     }
@@ -130,13 +120,13 @@ public class HingeJoint : Constraint
 
     private static void ValidateAnchor(Vector3 anchor, string parameterName)
     {
-        if (!anchor.HasFiniteComponents())
+        if (!anchor.AllComponentsAreFinite())
             throw new ArgumentOutOfRangeException(parameterName, anchor, "Anchor coordinates must be finite.");
     }
 
     private static Vector3 NormalizeAxis(Vector3 axis, string parameterName)
     {
-        if (!axis.HasFiniteComponents() || axis == Vector3.Zero)
+        if (!axis.AllComponentsAreFinite() || axis == Vector3.Zero)
             throw new ArgumentOutOfRangeException(parameterName, axis, "The hinge axis must be finite and nonzero.");
 
         // Rescale before measuring length so very small and very large axes can be normalized.
