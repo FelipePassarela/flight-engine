@@ -65,8 +65,7 @@ public class BallJoint : Constraint
 
     private static void ValidateAnchor(Vector3 localAnchor, string parameterName)
     {
-        var finiteComponents = Vector3.IsFinite(localAnchor);
-        if (!Vector3.AllWhereAllBitsSet(finiteComponents))
+        if (!localAnchor.HasFiniteComponents())
             throw new ArgumentOutOfRangeException(parameterName, localAnchor, "Anchor coordinates must be finite.");
     }
 }
