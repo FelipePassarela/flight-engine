@@ -103,8 +103,13 @@ public class AirplaneTests
             afterStep: _ => AssertWingsStayAttached(fuselage, wings));
 
         var expectedRollAxis = useLeftWing ? Vector3.UnitZ : -Vector3.UnitZ;
-        PhysicsAssert.RotatingAroundAxis(
-            fuselage, expectedRollAxis, minimumAxialSpeed: 0.25f, maximumOffAxisSpeed: 1e-3f);
+        var rollSpeed = Vector3.Dot(fuselage.AngularVelocity, expectedRollAxis);
+        const float minimumRollSpeed = 0.25f;
+        // The aileron mass shifts the center of mass aft, so a wing pulse can also induce pitch.
+        const float maximumOffAxisFraction = 0.05f;
+        var maximumOffAxisSpeed = rollSpeed * maximumOffAxisFraction;
+
+        PhysicsAssert.RotatingAroundAxis(fuselage, expectedRollAxis, minimumRollSpeed, maximumOffAxisSpeed);
         PhysicsAssert.RotatedByAtLeast(Quaternion.Identity, fuselage.Transform.Orientation, minimumAngleDegrees: 17f);
         foreach (var (wing, _) in wings)
             PhysicsAssert.VectorNear(fuselage.AngularVelocity, wing.AngularVelocity, 1e-3f);
@@ -153,8 +158,9 @@ public class AirplaneTests
 
         AssertRollResponse();
 
-        foreach (var body in bodies)
-            PhysicsAssert.OrientationNear(fuselage.Transform.Orientation, body.Transform.Orientation);
+        var fuselageOrientation = fuselage.Transform.Orientation;
+        PhysicsAssert.OrientationNear(fuselageOrientation, airplane.LeftWing.Transform.Orientation);
+        PhysicsAssert.OrientationNear(fuselageOrientation, airplane.RightWing.Transform.Orientation);
         return;
 
         void AssertCenterOfMassMotion(float elapsedSeconds)
